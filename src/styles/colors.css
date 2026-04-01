@@ -1,0 +1,10 @@
+:root {
+  /* Новая палитра на основе EduDash */
+  --primary-color: #007bff; /* Акцентный синий */
+  --secondary-color: #6c757d; /* Вторичный серый */
+  --background-color: #ffffff; /* Фон белый */
+  --text-color: #343a40; /* Основной текст */
+  --success-color: #28a745; /* Зеленый для успехов */
+  --error-color: #dc3545; /* Красный для ошибок */
+  --light-bg: #f8f9fa; /* Светлый фон */
+}

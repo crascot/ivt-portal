@@ -1,0 +1,145 @@
+.aboutPage {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.heroSection {
+  display: flex;
+}
+
+.heroContent {
+  width: 100%;
+  padding: 32px;
+  border-radius: 28px;
+  background:
+    linear-gradient(135deg, rgba(0, 123, 255, 0.08), rgba(0, 123, 255, 0.02)),
+    var(--background-color);
+  border: 1px solid rgba(0, 123, 255, 0.12);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(0, 123, 255, 0.1);
+  color: var(--primary-color);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.heroText {
+  max-width: 860px;
+  margin-bottom: 0;
+  font-size: 1.02rem;
+  line-height: 1.8;
+}
+
+.heroText + .heroText {
+  margin-top: 1rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sectionHeading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sectionHeading h2 {
+  margin-bottom: 0;
+}
+
+.sectionHeading p {
+  margin-bottom: 0;
+}
+
+.infoCard,
+.advantagesCard {
+  height: 100%;
+  border: 1px solid rgba(52, 58, 64, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 12px 32px rgba(17, 24, 39, 0.05);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.infoCard:hover,
+.advantagesCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(17, 24, 39, 0.08);
+  border-color: rgba(0, 123, 255, 0.14);
+}
+
+.infoCard :global(.card-body),
+.advantagesCard :global(.card-body) {
+  padding: 24px;
+}
+
+.cardTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 0.75rem;
+}
+
+.advantagesList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.advantagesList li {
+  padding: 0.75rem 0;
+  color: var(--secondary-color);
+  border-bottom: 1px solid rgba(52, 58, 64, 0.08);
+}
+
+.advantagesList li:last-child {
+  border-bottom: none;
+}
+
+.advantagesList li::before {
+  content: '✓';
+  color: var(--primary-color);
+  font-weight: 700;
+  margin-right: 0.65rem;
+}
+
+@media (--tablet) {
+  .aboutPage {
+    gap: 24px;
+  }
+
+  .heroContent {
+    padding: 24px;
+    border-radius: 24px;
+  }
+}
+
+@media (--mobile) {
+  .heroContent {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .heroText {
+    font-size: 0.98rem;
+  }
+
+  .infoCard :global(.card-body),
+  .advantagesCard :global(.card-body) {
+    padding: 20px;
+  }
+}

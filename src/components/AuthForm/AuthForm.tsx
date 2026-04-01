@@ -1,6 +1,11 @@
-import { LoginRequest, RegisterRequest, RoleEnum } from '@entities/authRequest';
 import { useMemo } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { Alert, Button, Form, Spinner } from 'react-bootstrap';
+import { SubmitHandler, useForm } from 'react-hook-form';
+
+import { LoginRequest, RegisterRequest } from '@entities/authRequest';
+import { RoleEnum } from '@entities/role-enum';
+
+import s from './AuthForm.module.css';
 
 type AuthMode = 'login' | 'register';
 
@@ -19,6 +24,7 @@ type CommonProps = {
   defaultValues?: Partial<AuthFormValues>;
   submitText?: string;
   isLoading?: boolean;
+  submitError?: string | null;
   className?: string;
 };
 
@@ -50,27 +56,32 @@ const FIELD_META: Record<
     label: string;
     type?: React.HTMLInputTypeAttribute;
     placeholder?: string;
+    autoComplete?: string;
   }
 > = {
   fullName: {
     label: 'Full name',
     type: 'text',
     placeholder: 'Enter your full name',
+    autoComplete: 'name',
   },
   email: {
     label: 'Email',
     type: 'email',
     placeholder: 'Enter your email',
+    autoComplete: 'email',
   },
   password: {
     label: 'Password',
     type: 'password',
     placeholder: 'Enter your password',
+    autoComplete: 'current-password',
   },
   groupname: {
     label: 'Group name',
     type: 'text',
     placeholder: 'Enter your group name',
+    autoComplete: 'organization',
   },
   role: {
     label: 'Role',
@@ -112,7 +123,7 @@ export const AuthForm: React.FC<AuthFormProps> = (props) => {
       email: '',
       password: '',
       groupname: '',
-      role: RoleEnum.STUDENT,
+      role: '',
       ...props.defaultValues,
     },
   });
@@ -149,8 +160,14 @@ export const AuthForm: React.FC<AuthFormProps> = (props) => {
         };
 
       case 'groupname':
-      case 'role':
         return {};
+
+      case 'role':
+        return props.mode === 'register'
+          ? {
+              required: 'Role is required',
+            }
+          : {};
 
       default:
         return {};
@@ -179,20 +196,36 @@ export const AuthForm: React.FC<AuthFormProps> = (props) => {
     await props.onSubmit(payload);
   };
 
+  const isBusy = props.isLoading || isSubmitting;
+
   return (
-    <form onSubmit={handleSubmit(onValid)} className={props.className}>
+    <Form
+      noValidate
+      onSubmit={handleSubmit(onValid)}
+      className={`${s.form} ${props.className ?? ''}`}
+    >
+      {props.submitError && (
+        <Alert variant="danger" className={s.alert}>
+          {props.submitError}
+        </Alert>
+      )}
+
       {visibleFields.map((field) => {
         const meta = FIELD_META[field];
         const errorMessage = errors[field]?.message as string | undefined;
 
         if (field === 'role') {
           return (
-            <div key={field} style={{ marginBottom: 16 }}>
-              <label htmlFor={field}>{meta.label}</label>
-              <select
+            <Form.Group key={field} className={s.field}>
+              <Form.Label htmlFor={field} className={s.label}>
+                {meta.label}
+              </Form.Label>
+
+              <Form.Select
                 id={field}
+                className={s.control}
+                isInvalid={!!errorMessage}
                 {...register('role', getRules('role'))}
-                defaultValue=""
               >
                 <option value="">Not selected</option>
                 {ROLE_OPTIONS.map((option) => (
@@ -200,31 +233,53 @@ export const AuthForm: React.FC<AuthFormProps> = (props) => {
                     {option.label}
                   </option>
                 ))}
-              </select>
+              </Form.Select>
 
-              {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-            </div>
+              <Form.Control.Feedback type="invalid">
+                {errorMessage}
+              </Form.Control.Feedback>
+            </Form.Group>
           );
         }
 
         return (
-          <div key={field} style={{ marginBottom: 16 }}>
-            <label htmlFor={field}>{meta.label}</label>
-            <input
+          <Form.Group key={field} className={s.field}>
+            <Form.Label htmlFor={field} className={s.label}>
+              {meta.label}
+            </Form.Label>
+
+            <Form.Control
               id={field}
               type={meta.type}
               placeholder={meta.placeholder}
+              autoComplete={meta.autoComplete}
+              className={s.control}
+              isInvalid={!!errorMessage}
               {...register(field, getRules(field))}
             />
 
-            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-          </div>
+            <Form.Control.Feedback type="invalid">
+              {errorMessage}
+            </Form.Control.Feedback>
+          </Form.Group>
         );
       })}
 
-      <button type="submit" disabled={props.isLoading || isSubmitting}>
-        {props.submitText ?? (props.mode === 'login' ? 'Login' : 'Register')}
-      </button>
-    </form>
+      <Button
+        type="submit"
+        disabled={isBusy}
+        className={s.submitButton}
+        variant="primary"
+      >
+        {isBusy ? (
+          <>
+            <Spinner animation="border" size="sm" className={s.spinner} />
+            Processing...
+          </>
+        ) : (
+          (props.submitText ?? (props.mode === 'login' ? 'Login' : 'Register'))
+        )}
+      </Button>
+    </Form>
   );
 };

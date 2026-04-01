@@ -20,7 +20,9 @@
       "@pages/*": ["pages/*"],
       "@hooks/*": ["hooks/*"],
       "@utils/*": ["utils/*"],
-      "@entities/*": ["types/*"]
+      "@entities/*": ["types/*"],
+      "@api/*": ["api/*"],
+      "@context/*": ["context/*"]
     }
   },
   "include": ["src/**/*"],

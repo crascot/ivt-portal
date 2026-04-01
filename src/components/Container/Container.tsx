@@ -5,5 +5,9 @@ type Props = {
 };
 
 export const Container = ({ children }: Props) => {
-  return <div className="page">{children}</div>;
+  return (
+    <div className="page-shell">
+      <div className="page">{children}</div>
+    </div>
+  );
 };

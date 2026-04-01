@@ -11,13 +11,6 @@ export type RegisterRequest = {
   role?: string;
 };
 
-export enum RoleEnum {
-  STUDENT = 'STUDENT',
-  TEACHER = 'TEACHER',
-  ADMIN = 'ADMIN',
-  GROUP_LEADER = 'GROUP_LEADER',
-}
-
 export interface AuthResponse {
   token: string;
 }

@@ -1,3 +1,4 @@
+import { ROUTES } from '@utils/routes';
 import { Link } from 'react-router-dom';
 
 const NotFound = () => {
@@ -5,7 +6,7 @@ const NotFound = () => {
     <div>
       <h1>404 - Page Not Found</h1>
       <p>Sorry, the page you&apos;re looking for doesn&apos;t exist.</p>
-      <Link to="/" className="button">
+      <Link to={ROUTES.MAIN} className="button">
         Go back to Home
       </Link>
     </div>

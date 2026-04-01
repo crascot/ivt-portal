@@ -1,20 +1,92 @@
+import { useState } from 'react';
+import { Card } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+
 import { AuthForm } from '@components/AuthForm/AuthForm';
-import { LoginRequest } from '@entities/authRequest';
+import { RegisterRequest } from '@entities/authRequest';
 import api from '@utils/api';
-import { setToken } from '@utils/helpers';
+import { ROUTES } from '@utils/routes';
+import { useAuth } from '@context/AuthContext';
+
+import s from './SignUp.module.css';
+
+const benefits = [
+  'Создайте аккаунт для доступа к материалам и заданиям',
+  'Выберите роль и получите подходящий интерфейс',
+  'Работайте с расписанием, дисциплинами и дедлайнами в одном месте',
+];
 
 export const SignUp = () => {
-  async function handleRegister(data: LoginRequest): Promise<void> {
-    const response = await api.post('/auth/register', data);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-    if (response.status !== 200) {
-      throw new Error('Login failed');
+  async function handleRegister(data: RegisterRequest): Promise<void> {
+    setSubmitError(null);
+
+    try {
+      const response = await api.post('/auth/register', data);
+      const result = response.data;
+
+      if (result?.token) {
+        login(result.token);
+        navigate(ROUTES.PROFILE);
+        return;
+      }
+
+      navigate(ROUTES.SIGN_IN);
+    } catch (error) {
+      console.error('Registration failed', error);
+      setSubmitError(
+        'Не удалось зарегистрироваться. Проверьте введённые данные.'
+      );
     }
-
-    const result = await response.data;
-    setToken(result.token);
-    console.log('Registered', result);
   }
 
-  return <AuthForm mode="register" onSubmit={handleRegister} />;
+  return (
+    <div className={s.signUpPage}>
+      <section className={s.infoBlock}>
+        <span className={s.eyebrow}>Регистрация</span>
+
+        <h1>Создайте аккаунт в IVT Portal</h1>
+
+        <p className={s.lead}>
+          Зарегистрируйтесь, чтобы получить доступ к учебным материалам,
+          дисциплинам, заданиям, расписанию и возможностям портала в
+          соответствии с вашей ролью.
+        </p>
+
+        <ul className={s.benefits}>
+          {benefits.map((item) => (
+            <li key={item} className={s.benefitItem}>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <Card className={s.formCard}>
+        <Card.Body>
+          <div className={s.formHeader}>
+            <h2>Добро пожаловать</h2>
+            <p>Заполните форму, чтобы создать новый аккаунт.</p>
+          </div>
+
+          <AuthForm
+            mode="register"
+            onSubmit={handleRegister}
+            submitText="Зарегистрироваться"
+            submitError={submitError}
+          />
+
+          <p className={s.footerText}>
+            Уже есть аккаунт?{' '}
+            <Link to={ROUTES.SIGN_IN} className={s.footerLink}>
+              Войти
+            </Link>
+          </p>
+        </Card.Body>
+      </Card>
+    </div>
+  );
 };

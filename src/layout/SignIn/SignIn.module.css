@@ -1,0 +1,154 @@
+.signInPage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 460px);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.infoBlock {
+  padding: 36px;
+  border-radius: 28px;
+  background:
+    linear-gradient(135deg, rgba(0, 123, 255, 0.1), rgba(0, 123, 255, 0.03)),
+    var(--background-color);
+  border: 1px solid rgba(0, 123, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  margin-bottom: 16px;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(0, 123, 255, 0.1);
+  color: var(--primary-color);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lead {
+  max-width: 680px;
+  font-size: 1.03rem;
+  line-height: 1.8;
+  margin-bottom: 0;
+}
+
+.highlights {
+  margin-top: 24px;
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+}
+
+.highlightItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 123, 255, 0.08);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.highlightItem::before {
+  content: '✓';
+  color: var(--primary-color);
+  font-weight: 800;
+  margin-top: 1px;
+  margin-left: 10px;
+}
+
+.formCard {
+  border: 1px solid rgba(52, 58, 64, 0.08);
+  border-radius: 28px;
+  box-shadow: 0 18px 50px rgba(17, 24, 39, 0.06);
+}
+
+.formCard :global(.card-body) {
+  padding: 32px;
+}
+
+.formHeader {
+  margin-bottom: 24px;
+}
+
+.formHeader h2 {
+  margin: 0 0 0.5rem;
+}
+
+.formHeader p {
+  margin: 0;
+}
+
+.footerText {
+  margin: 20px 0 0;
+  color: var(--secondary-color);
+  line-height: 1.6;
+}
+
+.footerLink {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.footerLink:hover {
+  color: #0069d9;
+}
+
+@media (--laptop) {
+  .signInPage {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (--tablet) {
+  .infoBlock {
+    padding: 28px;
+    border-radius: 24px;
+  }
+
+  .formCard {
+    border-radius: 24px;
+  }
+
+  .formCard :global(.card-body) {
+    padding: 24px;
+  }
+}
+
+@media (--mobile) {
+  .signInPage {
+    gap: 20px;
+  }
+
+  .infoBlock {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .lead {
+    font-size: 0.98rem;
+  }
+
+  .highlightItem {
+    padding: 14px 16px;
+    border-radius: 16px;
+  }
+
+  .formCard {
+    border-radius: 20px;
+  }
+
+  .formCard :global(.card-body) {
+    padding: 20px;
+  }
+}

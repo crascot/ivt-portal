@@ -20,17 +20,21 @@
 ├── public/
 │   └── index.html          # HTML шаблон
 ├── src/
+│   ├── api/                # Запросы на сервер
 │   ├── components/         # Переиспользуемые компоненты
-│   ├── pages/              # Страницы приложения
+│   ├── context/            # Обертка проекта для удобного управления состояний
+│   ├── declare/            # вспомогательные файлы для удобного импорта
 │   ├── hooks/              # Custom React hooks
-│   ├── utils/              # Вспомогательные функции
+│   ├── layout/             # Верстка страниц
+│   ├── pages/              # Страницы приложения
+│   ├── styles/             # Глобальные стили всего приложения(шрифты, цвета, размер)
 │   ├── types/              # TypeScript типы
+│   ├── utils/              # Вспомогательные функции
 │   ├── App.tsx             # Главный компонент с роутингом
 │   ├── index.tsx           # Входная точка приложения
-│   └── index.css           # Глобальные стили
 ├── .babelrc                # Конфигурация Babel
 ├── .eslintrc.json          # Конфигурация ESLint
-├── .prettierrc              # Конфигурация Prettier
+├── .prettierrc             # Конфигурация Prettier
 ├── tsconfig.json           # Конфигурация TypeScript
 ├── webpack.config.js       # Конфигурация Webpack
 ├── package.json
@@ -185,23 +189,3 @@ output: {
   // ...
 }
 ```
-
-## 📚 Полезные ссылки
-
-- [React документация](https://react.dev)
-- [TypeScript документация](https://www.typescriptlang.org)
-- [Webpack документация](https://webpack.js.org)
-- [React Router документация](https://reactrouter.com)
-- [ESLint документация](https://eslint.org)
-
-## 📄 Лицензия
-
-MIT
-
-## 🤝 Контрибьютинг
-
-Приветствуются pull requests и issue reports!
-
----
-
-**Создано с ❤️ для разработки приложений на React с TypeScript**
