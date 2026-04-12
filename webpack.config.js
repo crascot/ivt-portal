@@ -50,6 +50,7 @@ module.exports = async () => {
       path: path.resolve(__dirname, 'dist'),
       filename: 'js/[name].[contenthash].js',
       chunkFilename: 'js/[name].[contenthash].js',
+      publicPath: '/',
       clean: true,
     },
     module: {

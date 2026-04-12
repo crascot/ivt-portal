@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AdminRequest } from '@entities/adminRequest';
-import { adminApi } from '@api/admin/adminApi';
+import { adminAuthApi } from '@api/admin/adminAuthApi';
 
 export function usePendingUsers() {
   const [users, setUsers] = useState<AdminRequest[]>([]);
@@ -11,7 +11,7 @@ export function usePendingUsers() {
     try {
       setLoading(true);
       setError(null);
-      const data = await adminApi.getPending();
+      const data = await adminAuthApi.getPending();
       setUsers(data);
     } catch (e) {
       setError('Не удалось загрузить заявки');
@@ -21,13 +21,13 @@ export function usePendingUsers() {
   }, []);
 
   const approveUser = useCallback(async (id: number) => {
-    await adminApi.approve(id);
+    await adminAuthApi.approve(id);
 
     setUsers((prev) => prev.filter((user) => user.id !== id));
   }, []);
 
   const rejectUser = useCallback(async (id: number) => {
-    await adminApi.reject(id);
+    await adminAuthApi.reject(id);
     setUsers((prev) => prev.filter((user) => user.id !== id));
   }, []);
 

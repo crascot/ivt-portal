@@ -12,6 +12,9 @@ import { Sidebar } from '@components/Sidebar/Sidebar';
 import { ROUTES } from '@utils/routes';
 import { AuthProvider } from '@context/AuthContext';
 import PendingUsers from '@pages/pending-users';
+import PendingApproval from '@pages/pending-approval';
+import Groups from '@pages/groups';
+import Disciplines from '@pages/discipline';
 
 const App = () => {
   return (
@@ -27,7 +30,20 @@ const App = () => {
                 <Route path={ROUTES.SIGN_IN} element={<SignIn />} />
                 <Route path={ROUTES.SIGN_UP} element={<SignUp />} />
                 <Route path={ROUTES.PROFILE} element={<Profile />} />
-                <Route path={ROUTES.PENDING_USERS} element={<PendingUsers />} />
+                <Route
+                  path={ROUTES.PENDING_APPROVAL}
+                  element={<PendingApproval />}
+                />
+
+                <Route
+                  path={ROUTES.ADMIN_PENDING_USERS}
+                  element={<PendingUsers />}
+                />
+                <Route path={ROUTES.ADMIN_GROUPS} element={<Groups />} />
+                <Route
+                  path={ROUTES.ADMIN_DISCIPLINES}
+                  element={<Disciplines />}
+                />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Container>

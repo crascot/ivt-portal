@@ -16,3 +16,49 @@ enum UserStatus {
   APPROVED,
   REJECTED,
 }
+
+export type Group = {
+  id: number;
+  name: string;
+  courseNumber: number;
+  specialty: string;
+};
+
+export type GroupFormValues = {
+  name: string;
+  courseNumber: number;
+  specialty: string;
+};
+
+export type CreateGroupDto = {
+  name: string;
+  courseNumber: number;
+  specialty: string;
+};
+
+export type UpdateGroupDto = {
+  name: string;
+  courseNumber: number;
+  specialty: string;
+};
+
+export type Discipline = {
+  id: number;
+  name: string;
+  description: string;
+};
+
+export type DisciplineFormValues = {
+  name: string;
+  description: string;
+};
+
+export type CreateDisciplineDto = {
+  name: string;
+  description: string;
+};
+
+export type UpdateDisciplineDto = {
+  name: string;
+  description: string;
+};

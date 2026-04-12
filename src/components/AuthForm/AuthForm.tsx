@@ -1,23 +1,32 @@
-import { useMemo } from 'react';
+import { useMemo, type FC, type HTMLInputTypeAttribute } from 'react';
 import { Alert, Button, Form, Spinner } from 'react-bootstrap';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import {
+  type RegisterOptions,
+  type SubmitHandler,
+  useForm,
+} from 'react-hook-form';
 
-import { LoginRequest, RegisterRequest } from '@entities/authRequest';
-import { RoleEnum } from '@entities/role-enum';
+import {
+  GroupDto,
+  LoginRequest,
+  RegisterStudentRequest,
+  RegisterTeacherRequest,
+} from '@entities/authRequest';
 
 import s from './AuthForm.module.css';
 
-type AuthMode = 'login' | 'register';
+type AuthMode = 'login' | 'register-student' | 'register-teacher';
 
 type AuthFormValues = {
   fullName: string;
   email: string;
   password: string;
-  groupname: string;
-  role: RoleEnum | '';
+  position: string;
+  groupId: number | '';
 };
 
 type AuthFieldName = keyof AuthFormValues;
+type TextFieldName = Exclude<AuthFieldName, 'groupId'>;
 
 type CommonProps = {
   fields?: AuthFieldName[];
@@ -33,28 +42,39 @@ type LoginFormProps = CommonProps & {
   onSubmit: (data: LoginRequest) => void | Promise<void>;
 };
 
-type RegisterFormProps = CommonProps & {
-  mode: 'register';
-  onSubmit: (data: RegisterRequest) => void | Promise<void>;
+type RegisterStudentFormProps = CommonProps & {
+  mode: 'register-student';
+  groups: GroupDto[];
+  onSubmit: (data: RegisterStudentRequest) => void | Promise<void>;
 };
 
-type AuthFormProps = LoginFormProps | RegisterFormProps;
+type RegisterTeacherFormProps = CommonProps & {
+  mode: 'register-teacher';
+  onSubmit: (data: RegisterTeacherRequest) => void | Promise<void>;
+};
+
+type AuthFormProps =
+  | LoginFormProps
+  | RegisterStudentFormProps
+  | RegisterTeacherFormProps;
 
 const REQUIRED_FIELDS: Record<AuthMode, AuthFieldName[]> = {
   login: ['email', 'password'],
-  register: ['fullName', 'email', 'password', 'role'],
+  'register-student': ['fullName', 'email', 'password', 'groupId'],
+  'register-teacher': ['fullName', 'email', 'password', 'position'],
 };
 
 const DEFAULT_FIELDS: Record<AuthMode, AuthFieldName[]> = {
   login: ['email', 'password'],
-  register: ['fullName', 'email', 'password', 'groupname', 'role'],
+  'register-student': ['fullName', 'email', 'password', 'groupId'],
+  'register-teacher': ['fullName', 'email', 'password', 'position'],
 };
 
 const FIELD_META: Record<
   AuthFieldName,
   {
     label: string;
-    type?: React.HTMLInputTypeAttribute;
+    type?: HTMLInputTypeAttribute;
     placeholder?: string;
     autoComplete?: string;
   }
@@ -75,35 +95,22 @@ const FIELD_META: Record<
     label: 'Password',
     type: 'password',
     placeholder: 'Enter your password',
-    autoComplete: 'current-password',
   },
-  groupname: {
-    label: 'Group name',
+  position: {
+    label: 'Position',
     type: 'text',
-    placeholder: 'Enter your group name',
-    autoComplete: 'organization',
+    placeholder: 'Enter your position',
+    autoComplete: 'organization-title',
   },
-  role: {
-    label: 'Role',
-    placeholder: 'Select role',
+  groupId: {
+    label: 'Group',
+    placeholder: 'Select group',
   },
 };
-
-const ROLE_OPTIONS = [
-  { label: 'Student', value: RoleEnum.STUDENT },
-  { label: 'Teacher', value: RoleEnum.TEACHER },
-  { label: 'Admin', value: RoleEnum.ADMIN },
-  { label: 'Group leader', value: RoleEnum.GROUP_LEADER },
-];
 
 const trimValue = (value: string) => value.trim();
 
-const emptyToUndefined = (value: string) => {
-  const trimmed = value.trim();
-  return trimmed === '' ? undefined : trimmed;
-};
-
-export const AuthForm: React.FC<AuthFormProps> = (props) => {
+export const AuthForm: FC<AuthFormProps> = (props) => {
   const visibleFields = useMemo(() => {
     const source = props.fields?.length
       ? props.fields
@@ -122,16 +129,18 @@ export const AuthForm: React.FC<AuthFormProps> = (props) => {
       fullName: '',
       email: '',
       password: '',
-      groupname: '',
-      role: '',
+      position: '',
+      groupId: '',
       ...props.defaultValues,
     },
   });
 
-  const getRules = (field: AuthFieldName) => {
+  const getTextRules = (
+    field: TextFieldName
+  ): RegisterOptions<AuthFormValues, TextFieldName> => {
     switch (field) {
       case 'fullName':
-        return props.mode === 'register'
+        return props.mode !== 'login'
           ? {
               required: 'Full name is required',
               minLength: {
@@ -159,19 +168,34 @@ export const AuthForm: React.FC<AuthFormProps> = (props) => {
           },
         };
 
-      case 'groupname':
-        return {};
-
-      case 'role':
-        return props.mode === 'register'
+      case 'position':
+        return props.mode === 'register-teacher'
           ? {
-              required: 'Role is required',
+              required: 'Position is required',
+              minLength: {
+                value: 2,
+                message: 'Minimum 2 characters',
+              },
             }
           : {};
 
       default:
         return {};
     }
+  };
+
+  const getGroupRules = (): RegisterOptions<AuthFormValues, 'groupId'> => {
+    return props.mode === 'register-student'
+      ? {
+          required: 'Group is required',
+          setValueAs: (value: string) => (value === '' ? '' : Number(value)),
+          validate: (value) =>
+            (typeof value === 'number' &&
+              Number.isInteger(value) &&
+              value > 0) ||
+            'Select group',
+        }
+      : {};
   };
 
   const onValid: SubmitHandler<AuthFormValues> = async (values) => {
@@ -185,12 +209,23 @@ export const AuthForm: React.FC<AuthFormProps> = (props) => {
       return;
     }
 
-    const payload: RegisterRequest = {
+    if (props.mode === 'register-student') {
+      const payload: RegisterStudentRequest = {
+        fullName: trimValue(values.fullName),
+        email: trimValue(values.email),
+        password: values.password,
+        groupId: Number(values.groupId),
+      };
+
+      await props.onSubmit(payload);
+      return;
+    }
+
+    const payload: RegisterTeacherRequest = {
       fullName: trimValue(values.fullName),
       email: trimValue(values.email),
       password: values.password,
-      groupname: emptyToUndefined(values.groupname),
-      role: values.role || undefined,
+      position: trimValue(values.position),
     };
 
     await props.onSubmit(payload);
@@ -202,7 +237,7 @@ export const AuthForm: React.FC<AuthFormProps> = (props) => {
     <Form
       noValidate
       onSubmit={handleSubmit(onValid)}
-      className={`${s.form} ${props.className ?? ''}`}
+      className={`${s.form} ${props.className ?? ''}`.trim()}
     >
       {props.submitError && (
         <Alert variant="danger" className={s.alert}>
@@ -214,7 +249,9 @@ export const AuthForm: React.FC<AuthFormProps> = (props) => {
         const meta = FIELD_META[field];
         const errorMessage = errors[field]?.message as string | undefined;
 
-        if (field === 'role') {
+        if (field === 'groupId') {
+          const groups = props.mode === 'register-student' ? props.groups : [];
+
           return (
             <Form.Group key={field} className={s.field}>
               <Form.Label htmlFor={field} className={s.label}>
@@ -225,12 +262,12 @@ export const AuthForm: React.FC<AuthFormProps> = (props) => {
                 id={field}
                 className={s.control}
                 isInvalid={!!errorMessage}
-                {...register('role', getRules('role'))}
+                {...register('groupId', getGroupRules())}
               >
                 <option value="">Not selected</option>
-                {ROLE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
                   </option>
                 ))}
               </Form.Select>
@@ -242,20 +279,28 @@ export const AuthForm: React.FC<AuthFormProps> = (props) => {
           );
         }
 
+        const textField = field as TextFieldName;
+
         return (
-          <Form.Group key={field} className={s.field}>
-            <Form.Label htmlFor={field} className={s.label}>
+          <Form.Group key={textField} className={s.field}>
+            <Form.Label htmlFor={textField} className={s.label}>
               {meta.label}
             </Form.Label>
 
             <Form.Control
-              id={field}
+              id={textField}
               type={meta.type}
               placeholder={meta.placeholder}
-              autoComplete={meta.autoComplete}
+              autoComplete={
+                textField === 'password'
+                  ? props.mode === 'login'
+                    ? 'current-password'
+                    : 'new-password'
+                  : meta.autoComplete
+              }
               className={s.control}
               isInvalid={!!errorMessage}
-              {...register(field, getRules(field))}
+              {...register(textField, getTextRules(textField))}
             />
 
             <Form.Control.Feedback type="invalid">

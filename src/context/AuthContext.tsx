@@ -32,29 +32,40 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const getInitialToken = (): string | null => {
-  const token = getToken();
+  try {
+    const token = getToken();
 
-  if (!token) return null;
-  if (isTokenExpired(token)) {
-    removeToken();
+    if (!token) return null;
+    if (isTokenExpired(token)) {
+      removeToken();
+      return null;
+    }
+
+    return token;
+  } catch (error) {
+    console.error('Failed to read token:', error);
     return null;
   }
-
-  return token;
 };
 
 const mapTokenToUser = (token: string | null): AuthUser | null => {
   if (!token) return null;
 
-  const payload = decodeToken(token);
-  if (!payload) return null;
+  try {
+    const payload = decodeToken(token);
 
-  return {
-    email: payload.sub,
-    role:
-      payload.role ||
-      (Array.isArray(payload.roles) ? payload.roles[0] : undefined),
-  };
+    if (!payload) return null;
+
+    return {
+      email: payload.sub,
+      role:
+        payload.role ||
+        (Array.isArray(payload.roles) ? payload.roles[0] : undefined),
+    };
+  } catch (error) {
+    console.error('Failed to decode token:', error);
+    return null;
+  }
 };
 
 type Props = {
@@ -66,14 +77,16 @@ export const AuthProvider = ({ children }: Props) => {
     getInitialToken()
   );
 
+  const user = useMemo(() => mapTokenToUser(token), [token]);
+
   useEffect(() => {
     if (!token) return;
 
-    if (isTokenExpired(token)) {
+    if (isTokenExpired(token) || !user) {
       removeToken();
       setTokenState(null);
     }
-  }, [token]);
+  }, [token, user]);
 
   const login = (nextToken: string) => {
     setToken(nextToken);
@@ -85,13 +98,11 @@ export const AuthProvider = ({ children }: Props) => {
     setTokenState(null);
   };
 
-  const user = useMemo(() => mapTokenToUser(token), [token]);
-
   const value = useMemo<AuthContextValue>(
     () => ({
       token,
       user,
-      isAuthenticated: !!token,
+      isAuthenticated: !!token && !!user,
       login,
       logout,
       hasRole: (role: string) => user?.role === role,

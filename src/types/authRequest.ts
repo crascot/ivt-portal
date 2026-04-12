@@ -3,14 +3,21 @@ export type LoginRequest = {
   password: string;
 };
 
-export type RegisterRequest = {
+type RegisterBaseRequest = {
   fullName: string;
   email: string;
   password: string;
-  groupname?: string;
-  role?: string;
 };
 
-export interface AuthResponse {
-  token: string;
-}
+export type RegisterStudentRequest = RegisterBaseRequest & {
+  groupId: number;
+};
+
+export type RegisterTeacherRequest = RegisterBaseRequest & {
+  position: string;
+};
+
+export type GroupDto = {
+  id: number;
+  name: string;
+};

@@ -18,7 +18,11 @@ const commonNavItems: NavItem[] = [
 const roleNavItems: Record<string, NavItem[]> = {
   STUDENT: [],
   TEACHER: [],
-  ADMIN: [{ label: 'Заявки', to: '/admin/pending-users' }],
+  ADMIN: [
+    { label: 'Заявки', to: ROUTES.ADMIN_PENDING_USERS },
+    { label: 'Группы', to: ROUTES.ADMIN_GROUPS },
+    { label: 'Дисциплины', to: ROUTES.ADMIN_DISCIPLINES },
+  ],
   GROUP_LEADER: [],
 };
 
