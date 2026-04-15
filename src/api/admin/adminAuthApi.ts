@@ -19,4 +19,11 @@ export const adminAuthApi = {
     const { data } = await api.get('/admin/me');
     return data;
   },
+
+  // Сначало закончи с расписанием
+
+  // async getGroupInfo(id: number): Promise<any> {
+  //   const { data } = await api.put(`/group/${id}/schedules`);
+  //   return data;
+  // },
 };

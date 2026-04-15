@@ -1,0 +1,44 @@
+.schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.header h1 {
+  margin-bottom: 0;
+}
+
+.header p {
+  color: var(--bs-secondary-color, #6c757d);
+  margin-bottom: 0;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.cardToday {
+  border-color: var(--bs-success);
+  box-shadow: 0 0 0 1px var(--bs-success);
+}
+
+.unauthMessage {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.unauthMessage h2 {
+  margin-bottom: 0.5rem;
+}
+
+.unauthMessage p {
+  color: var(--bs-secondary-color, #6c757d);
+}

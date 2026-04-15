@@ -37,9 +37,35 @@ export type CreateGroupDto = {
 };
 
 export type UpdateGroupDto = {
+  name?: string;
+  courseNumber?: number;
+  specialty?: string;
+  starostaId?: number | null;
+};
+
+export type UserShort = {
+  id: number;
+  fullName: string;
+  email: string;
+};
+
+export type StudentShort = {
+  id: number;
+  user: UserShort;
+};
+
+export type ResponseGroup = {
+  id: number;
   name: string;
   courseNumber: number;
   specialty: string;
+  starostaId: number | null;
+  starostaName: string | null;
+};
+
+export type GroupStudentsResponse = {
+  group: ResponseGroup;
+  students: StudentShort[];
 };
 
 export type Discipline = {

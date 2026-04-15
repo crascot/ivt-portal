@@ -14,10 +14,19 @@ import {
   removeToken,
   setToken,
 } from '@utils/helpers';
+import { RoleEnum } from '@entities/role-enum';
+
+type JwtPayload = {
+  sub?: string;
+  email?: string;
+  role?: unknown;
+  roles?: unknown;
+};
 
 type AuthUser = {
   email?: string;
-  role?: string;
+  role?: RoleEnum;
+  roles: RoleEnum[];
 };
 
 type AuthContextValue = {
@@ -26,10 +35,54 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   login: (token: string) => void;
   logout: () => void;
-  hasRole: (role: string) => boolean;
+  hasRole: (roles: RoleEnum | RoleEnum[]) => boolean;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+const ROLE_PRIORITY: RoleEnum[] = [
+  RoleEnum.ADMIN,
+  RoleEnum.GROUP_LEADER,
+  RoleEnum.TEACHER,
+  RoleEnum.STUDENT,
+];
+
+const normalizeRole = (value: unknown): RoleEnum | null => {
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.trim().replace(/[-\s]/g, '_').toUpperCase();
+
+  switch (normalized) {
+    case RoleEnum.STUDENT:
+      return RoleEnum.STUDENT;
+    case RoleEnum.TEACHER:
+      return RoleEnum.TEACHER;
+    case RoleEnum.ADMIN:
+      return RoleEnum.ADMIN;
+    case RoleEnum.GROUP_LEADER:
+      return RoleEnum.GROUP_LEADER;
+    default:
+      return null;
+  }
+};
+
+const getRolesFromPayload = (payload: JwtPayload): RoleEnum[] => {
+  const rawRoles = Array.isArray(payload.roles)
+    ? payload.roles
+    : payload.role != null
+      ? [payload.role]
+      : [];
+
+  const normalizedRoles = rawRoles
+    .map(normalizeRole)
+    .filter((role): role is RoleEnum => role !== null);
+
+  return Array.from(new Set(normalizedRoles));
+};
+
+const getPrimaryRole = (roles: RoleEnum[]): RoleEnum | undefined => {
+  return ROLE_PRIORITY.find((role) => roles.includes(role));
+};
 
 const getInitialToken = (): string | null => {
   try {
@@ -44,6 +97,7 @@ const getInitialToken = (): string | null => {
     return token;
   } catch (error) {
     console.error('Failed to read token:', error);
+    removeToken();
     return null;
   }
 };
@@ -52,15 +106,24 @@ const mapTokenToUser = (token: string | null): AuthUser | null => {
   if (!token) return null;
 
   try {
-    const payload = decodeToken(token);
+    const payload = decodeToken(token) as JwtPayload | null;
 
-    if (!payload) return null;
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+
+    const roles = getRolesFromPayload(payload);
+    const email =
+      typeof payload.sub === 'string'
+        ? payload.sub
+        : typeof payload.email === 'string'
+          ? payload.email
+          : undefined;
 
     return {
-      email: payload.sub,
-      role:
-        payload.role ||
-        (Array.isArray(payload.roles) ? payload.roles[0] : undefined),
+      email,
+      roles,
+      role: getPrimaryRole(roles),
     };
   } catch (error) {
     console.error('Failed to decode token:', error);
@@ -82,11 +145,23 @@ export const AuthProvider = ({ children }: Props) => {
   useEffect(() => {
     if (!token) return;
 
-    if (isTokenExpired(token) || !user) {
+    if (isTokenExpired(token) || user === null) {
       removeToken();
       setTokenState(null);
     }
   }, [token, user]);
+
+  useEffect(() => {
+    const handleStorage = () => {
+      setTokenState(getInitialToken());
+    };
+
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
 
   const login = (nextToken: string) => {
     setToken(nextToken);
@@ -98,15 +173,30 @@ export const AuthProvider = ({ children }: Props) => {
     setTokenState(null);
   };
 
+  const hasRole = (requiredRoles: RoleEnum | RoleEnum[]) => {
+    if (!user) return false;
+
+    if (user.roles.includes(RoleEnum.ADMIN)) {
+      return true;
+    }
+
+    const rolesToCheck = Array.isArray(requiredRoles)
+      ? requiredRoles
+      : [requiredRoles];
+
+    return rolesToCheck.some((role) => user.roles.includes(role));
+  };
+
   const value = useMemo<AuthContextValue>(
     () => ({
       token,
       user,
-      isAuthenticated: !!token && !!user,
+      isAuthenticated: !!token,
       login,
       logout,
-      hasRole: (role: string) => user?.role === role,
+      hasRole,
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [token, user]
   );
 

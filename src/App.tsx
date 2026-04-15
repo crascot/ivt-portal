@@ -1,20 +1,26 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-import NotFound from '@pages/not-found';
-import SignIn from '@pages/sign-in';
-import SignUp from '@pages/sign-up';
+import { AuthProvider } from '@context/AuthContext';
+import ProtectedRoute from '@components/ProtectedRoute/ProtectedRoute';
 
 import { Container } from '@components/Container/Container';
+import { Sidebar } from '@components/Sidebar/Sidebar';
+
 import Home from '@pages/home';
 import About from '@pages/about';
 import Profile from '@pages/profile';
-import { Sidebar } from '@components/Sidebar/Sidebar';
-import { ROUTES } from '@utils/routes';
-import { AuthProvider } from '@context/AuthContext';
-import PendingUsers from '@pages/pending-users';
+import SignIn from '@pages/sign-in';
+import SignUp from '@pages/sign-up';
 import PendingApproval from '@pages/pending-approval';
+import PendingUsers from '@pages/pending-users';
 import Groups from '@pages/groups';
 import Disciplines from '@pages/discipline';
+import NotFound from '@pages/not-found';
+
+import { ROUTES } from '@utils/routes';
+import { RoleEnum } from '@entities/role-enum';
+import Schedule from '@pages/schedule';
+import Tasks from '@pages/tasks';
 
 const App = () => {
   return (
@@ -27,23 +33,49 @@ const App = () => {
               <Routes>
                 <Route path={ROUTES.MAIN} element={<Home />} />
                 <Route path={ROUTES.ABOUT} element={<About />} />
-                <Route path={ROUTES.SIGN_IN} element={<SignIn />} />
-                <Route path={ROUTES.SIGN_UP} element={<SignUp />} />
-                <Route path={ROUTES.PROFILE} element={<Profile />} />
-                <Route
-                  path={ROUTES.PENDING_APPROVAL}
-                  element={<PendingApproval />}
-                />
 
                 <Route
-                  path={ROUTES.ADMIN_PENDING_USERS}
-                  element={<PendingUsers />}
-                />
-                <Route path={ROUTES.ADMIN_GROUPS} element={<Groups />} />
+                  element={
+                    <ProtectedRoute
+                      guestOnly
+                      authenticatedRedirectTo={ROUTES.PROFILE}
+                    />
+                  }
+                >
+                  <Route path={ROUTES.SIGN_IN} element={<SignIn />} />
+                  <Route path={ROUTES.SIGN_UP} element={<SignUp />} />
+
+                  <Route
+                    path={ROUTES.PENDING_APPROVAL}
+                    element={<PendingApproval />}
+                  />
+                </Route>
+
+                <Route element={<ProtectedRoute />}>
+                  <Route path={ROUTES.PROFILE} element={<Profile />} />
+                  <Route path={ROUTES.SCHEDULE} element={<Schedule />} />
+                  <Route path={ROUTES.TASKS} element={<Tasks />} />
+                </Route>
+
                 <Route
-                  path={ROUTES.ADMIN_DISCIPLINES}
-                  element={<Disciplines />}
-                />
+                  element={
+                    <ProtectedRoute
+                      allowedRoles={[RoleEnum.ADMIN]}
+                      unauthorizedRedirectTo={ROUTES.MAIN}
+                    />
+                  }
+                >
+                  <Route
+                    path={ROUTES.ADMIN_PENDING_USERS}
+                    element={<PendingUsers />}
+                  />
+                  <Route path={ROUTES.ADMIN_GROUPS} element={<Groups />} />
+                  <Route
+                    path={ROUTES.ADMIN_DISCIPLINES}
+                    element={<Disciplines />}
+                  />
+                </Route>
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Container>

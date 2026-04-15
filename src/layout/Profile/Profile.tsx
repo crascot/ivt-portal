@@ -27,7 +27,15 @@ export const Profile = () => {
         </div>
       );
 
-    case (RoleEnum.GROUP_LEADER, RoleEnum.STUDENT):
+    case RoleEnum.GROUP_LEADER:
+      return (
+        <div>
+          <h1>Student</h1>
+          <button onClick={logout}>Logout</button>
+        </div>
+      );
+
+    case RoleEnum.STUDENT:
       return (
         <div>
           <h1>Student</h1>

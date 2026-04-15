@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Button, Card, Spinner, Table } from 'react-bootstrap';
+import { FiUsers } from 'react-icons/fi';
 
 import { Group } from '@entities/adminRequest';
 import { useGroupForm } from '@hooks/groups/useGroupForm';
 import { GroupForm } from './GroupForm/GroupForm';
+import { GroupStudents } from './GroupStudents/GroupStudents';
 
 export const Groups = () => {
   const {
@@ -23,6 +25,8 @@ export const Groups = () => {
     removeItem,
   } = useGroupForm();
 
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+
   const sortedGroups = useMemo(() => {
     return [...groups].sort((a, b) => a.name.localeCompare(b.name));
   }, [groups]);
@@ -35,6 +39,14 @@ export const Groups = () => {
     }
 
     await removeItem(group.id);
+
+    if (selectedGroup?.id === group.id) {
+      setSelectedGroup(null);
+    }
+  };
+
+  const handleSelectGroup = (group: Group) => {
+    setSelectedGroup((prev) => (prev?.id === group.id ? null : group));
   };
 
   return (
@@ -93,16 +105,21 @@ export const Groups = () => {
             <Table responsive bordered hover className="align-middle mb-0">
               <thead>
                 <tr>
-                  <th style={{ width: '80px' }}>ID</th>
+                  <th style={{ width: '50px' }}>#</th>
                   <th>Название</th>
                   <th style={{ width: '120px' }}>Курс</th>
                   <th>Специальность</th>
-                  <th style={{ width: '220px' }}>Действия</th>
+                  <th style={{ width: '280px' }}>Действия</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedGroups.map((group, index) => (
-                  <tr key={group.id}>
+                  <tr
+                    key={group.id}
+                    className={
+                      selectedGroup?.id === group.id ? 'table-primary' : ''
+                    }
+                  >
                     <td>{index + 1}</td>
                     <td>{group.name}</td>
                     <td>{group.courseNumber}</td>
@@ -111,10 +128,24 @@ export const Groups = () => {
                       <div className="d-flex gap-2">
                         <Button
                           size="sm"
+                          variant={
+                            selectedGroup?.id === group.id
+                              ? 'primary'
+                              : 'outline-primary'
+                          }
+                          onClick={() => handleSelectGroup(group)}
+                          title="Студенты и староста"
+                        >
+                          <FiUsers size={14} className="me-1" />
+                          Студенты
+                        </Button>
+
+                        <Button
+                          size="sm"
                           variant="outline-secondary"
                           onClick={() => startEdit(group)}
                         >
-                          Редактировать
+                          Изменить
                         </Button>
 
                         <Button
@@ -134,6 +165,14 @@ export const Groups = () => {
           )}
         </Card.Body>
       </Card>
+
+      {selectedGroup && (
+        <GroupStudents
+          groupId={selectedGroup.id}
+          groupName={selectedGroup.name}
+          onClose={() => setSelectedGroup(null)}
+        />
+      )}
     </div>
   );
 };

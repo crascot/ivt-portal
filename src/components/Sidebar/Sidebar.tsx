@@ -16,14 +16,25 @@ const commonNavItems: NavItem[] = [
 ];
 
 const roleNavItems: Record<string, NavItem[]> = {
-  STUDENT: [],
-  TEACHER: [],
+  STUDENT: [
+    { label: 'Расписание', to: ROUTES.SCHEDULE },
+    { label: 'Задания', to: ROUTES.TASKS },
+  ],
+  TEACHER: [
+    { label: 'Расписание', to: ROUTES.SCHEDULE },
+    { label: 'Задания', to: ROUTES.TASKS },
+  ],
   ADMIN: [
     { label: 'Заявки', to: ROUTES.ADMIN_PENDING_USERS },
     { label: 'Группы', to: ROUTES.ADMIN_GROUPS },
     { label: 'Дисциплины', to: ROUTES.ADMIN_DISCIPLINES },
+    { label: 'Расписание', to: ROUTES.SCHEDULE },
+    { label: 'Поиск заданий', to: ROUTES.TASKS },
   ],
-  GROUP_LEADER: [],
+  GROUP_LEADER: [
+    { label: 'Расписание', to: ROUTES.SCHEDULE },
+    { label: 'Задания', to: ROUTES.TASKS },
+  ],
 };
 
 export const Sidebar = () => {

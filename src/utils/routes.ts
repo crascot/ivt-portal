@@ -6,6 +6,9 @@ export enum ROUTES {
   PROFILE = '/profile',
   PENDING_APPROVAL = '/pending-approval',
 
+  SCHEDULE = '/schedule',
+  TASKS = '/tasks',
+
   ADMIN_PENDING_USERS = '/admin/pending-users',
   ADMIN_GROUPS = '/admin/groups',
   ADMIN_DISCIPLINES = '/admin/disciplines',
