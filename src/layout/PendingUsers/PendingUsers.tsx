@@ -74,18 +74,11 @@ export const PendingUsers = () => {
 
                 <div className={s.metaGrid}>
                   <div className={s.metaItem}>
-                    <span className={s.metaLabel}>Группа</span>
+                    <span className={s.metaLabel}>Роль</span>
                     <span className={s.metaValue}>
-                      {user.groupName || 'Не указана'}
+                      {user.roles[0].name || 'Не указана'}
                     </span>
                   </div>
-
-                  {'role' in user && user.role && (
-                    <div className={s.metaItem}>
-                      <span className={s.metaLabel}>Роль</span>
-                      <span className={s.metaValue}>{user.role}</span>
-                    </div>
-                  )}
                 </div>
 
                 <div className={s.actions}>

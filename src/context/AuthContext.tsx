@@ -48,9 +48,23 @@ const ROLE_PRIORITY: RoleEnum[] = [
 ];
 
 const normalizeRole = (value: unknown): RoleEnum | null => {
-  if (typeof value !== 'string') return null;
+  const rawRole =
+    typeof value === 'string'
+      ? value
+      : typeof value === 'object' &&
+          value !== null &&
+          'authority' in value &&
+          typeof (value as { authority?: unknown }).authority === 'string'
+        ? (value as { authority: string }).authority
+        : null;
 
-  const normalized = value.trim().replace(/[-\s]/g, '_').toUpperCase();
+  if (!rawRole) return null;
+
+  const normalized = rawRole
+    .trim()
+    .replace(/^ROLE_/i, '')
+    .replace(/[-\s]/g, '_')
+    .toUpperCase();
 
   switch (normalized) {
     case RoleEnum.STUDENT:

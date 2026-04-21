@@ -8,6 +8,8 @@ export enum ROUTES {
 
   SCHEDULE = '/schedule',
   TASKS = '/tasks',
+  UMM = '/umm',
+  UMM_DETAIL = '/umm/:id',
 
   ADMIN_PENDING_USERS = '/admin/pending-users',
   ADMIN_GROUPS = '/admin/groups',

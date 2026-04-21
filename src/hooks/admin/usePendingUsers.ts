@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AdminRequest } from '@entities/adminRequest';
 import { adminAuthApi } from '@api/admin/adminAuthApi';
+import { RoleEnum } from '@entities/role-enum';
+
+type PendingUsersType = {
+  id: number;
+  fullName: string;
+  email: string;
+  roles: { id: number; name: RoleEnum }[];
+  status: string;
+};
 
 export function usePendingUsers() {
-  const [users, setUsers] = useState<AdminRequest[]>([]);
+  const [users, setUsers] = useState<PendingUsersType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

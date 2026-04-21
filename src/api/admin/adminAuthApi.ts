@@ -1,9 +1,9 @@
-import { AdminRequest } from '@entities/adminRequest';
+import { AdminRequest, PendingUsersType } from '@entities/adminRequest';
 import api from '@utils/api';
 
 export const adminAuthApi = {
-  async getPending(): Promise<AdminRequest[]> {
-    const { data } = await api.get<AdminRequest[]>('/admin/pending');
+  async getPending(): Promise<PendingUsersType[]> {
+    const { data } = await api.get<PendingUsersType[]>('/admin/pending');
     return data;
   },
 

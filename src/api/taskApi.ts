@@ -1,5 +1,4 @@
-import { DisciplineShort } from '@entities/scheduleRequest';
-import { CreateTaskDto, TaskDiscipline, TaskDto } from '@entities/taskRequest';
+import { TaskDto } from '@entities/taskRequest';
 import api from '@utils/api';
 
 export const taskApi = {
@@ -8,54 +7,90 @@ export const taskApi = {
     return data;
   },
 
-  async getTeacherDisciplines(teacherId: number): Promise<TaskDiscipline[]> {
-    const { data } = await api.get<TaskDiscipline[]>(
-      `/teacher/${teacherId}/disciplines`
-    );
-    return data;
-  },
-
-  async getAllDisciplines(): Promise<DisciplineShort[]> {
-    const { data } = await api.get<DisciplineShort[]>('/schedule/disciplines');
-    return data;
-  },
-
-  async createTask(payload: CreateTaskDto): Promise<void> {
+  async addTask(
+    title: string,
+    description: string,
+    disciplineId: number,
+    createdById: number,
+    deadline: string | null,
+    files?: File[]
+  ): Promise<void> {
     const formData = new FormData();
-    formData.append('title', payload.title);
-    formData.append('description', payload.description);
-    formData.append('disciplineId', String(payload.disciplineId));
-    formData.append('createdById', String(payload.createdById));
-
-    if (payload.file) {
-      formData.append('file', payload.file);
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('disciplineId', String(disciplineId));
+    formData.append('createdById', String(createdById));
+    if (deadline) {
+      formData.append('deadline', deadline);
+    }
+    if (files?.length) {
+      files.forEach((file) => formData.append('files', file));
     }
 
-    await api.post('/task/add', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    await api.post('/task/add', formData);
+  },
+
+  async updateTask(
+    taskId: number,
+    params: {
+      title?: string;
+      description?: string;
+      disciplineId?: number;
+      deadline?: string | null;
+      files?: File[];
+    }
+  ): Promise<void> {
+    const formData = new FormData();
+    if (params.title) formData.append('title', params.title);
+    if (params.description) formData.append('description', params.description);
+    if (params.disciplineId != null)
+      formData.append('disciplineId', String(params.disciplineId));
+    if (params.deadline !== undefined)
+      formData.append('deadline', params.deadline ?? '');
+    if (params.files) {
+      params.files.forEach((file) => formData.append('files', file));
+    }
+
+    await api.patch(`/task/${taskId}`, formData);
+  },
+
+  async deleteTask(taskId: number): Promise<void> {
+    await api.delete(`/task/${taskId}`);
+  },
+
+  async deleteAttachment(attachmentId: number): Promise<void> {
+    await api.delete(`/task/attachments/${attachmentId}`);
   },
 
   async downloadAttachment(
     attachmentId: number,
     fileName: string
   ): Promise<void> {
-    const { data } = await api.get<Blob>(
+    const { data } = await api.get(
       `/task/attachments/${attachmentId}/download`,
       {
         responseType: 'blob',
       }
     );
 
-    const blobUrl = window.URL.createObjectURL(data);
+    const blob = new Blob([data]);
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = blobUrl;
+    link.href = url;
     link.download = fileName;
     document.body.appendChild(link);
     link.click();
     link.remove();
-    window.URL.revokeObjectURL(blobUrl);
+    window.URL.revokeObjectURL(url);
+  },
+
+  async getAttachmentBlob(attachmentId: number): Promise<Blob> {
+    const { data } = await api.get(
+      `/task/attachments/${attachmentId}/download`,
+      {
+        responseType: 'blob',
+      }
+    );
+    return data;
   },
 };

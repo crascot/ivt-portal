@@ -1,27 +1,47 @@
-import { Alert, Badge, Card } from 'react-bootstrap';
-import { FiClock, FiMapPin, FiUser } from 'react-icons/fi';
+import { Alert, Badge, Card, Table } from 'react-bootstrap';
 
-import { UpcomingScheduleDto } from '@entities/scheduleRequest';
-
-import s from '../Schedule.module.css';
+import {
+  DAY_OF_WEEK_LABELS,
+  DAY_OF_WEEK_ORDER,
+  DayOfWeek,
+  UpcomingScheduleDto,
+} from '@entities/scheduleRequest';
 
 type Props = {
   schedule: UpcomingScheduleDto[];
   groupName: string | null;
 };
 
-const formatDateTime = (iso: string) => {
-  const date = new Date(iso);
-  const day = date.toLocaleDateString('ru-RU', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
-  const time = date.toLocaleTimeString('ru-RU', {
+const formatTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString('ru-RU', {
     hour: '2-digit',
     minute: '2-digit',
   });
-  return { day, time };
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+  });
+
+const getDayOfWeek = (iso: string): DayOfWeek => {
+  const day = new Date(iso).getDay();
+  switch (day) {
+    case 1:
+      return DayOfWeek.Monday;
+    case 2:
+      return DayOfWeek.Tuesday;
+    case 3:
+      return DayOfWeek.Wednesday;
+    case 4:
+      return DayOfWeek.Thursday;
+    case 5:
+      return DayOfWeek.Friday;
+    case 6:
+      return DayOfWeek.Saturday;
+    default:
+      return DayOfWeek.Sunday;
+  }
 };
 
 const isToday = (iso: string) => {
@@ -35,53 +55,76 @@ export const StudentSchedule = ({ schedule, groupName }: Props) => {
     return <Alert variant="light">Расписание пока пусто</Alert>;
   }
 
-  return (
-    <div className={s.cardGrid}>
-      {schedule.map((item) => {
-        const start = formatDateTime(item.startDateTime);
-        const end = formatDateTime(item.endDateTime);
-        const today = isToday(item.startDateTime);
-
-        return (
-          <Card key={item.scheduleId} className={today ? s.cardToday : ''}>
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-start mb-2">
-                <Card.Title className="mb-0 fs-6">
-                  {item.disciplineName}
-                </Card.Title>
-                {today && <Badge bg="success">Сегодня</Badge>}
-              </div>
-
-              <div className="d-flex flex-column gap-1 text-muted small">
-                <span className="d-flex align-items-center gap-1">
-                  <FiClock size={14} />
-                  {start.day}, {start.time} — {end.time}
-                </span>
-
-                {item.teacherName && (
-                  <span className="d-flex align-items-center gap-1">
-                    <FiUser size={14} />
-                    {item.teacherName}
-                  </span>
-                )}
-
-                {item.room && (
-                  <span className="d-flex align-items-center gap-1">
-                    <FiMapPin size={14} />
-                    Аудитория {item.room}
-                  </span>
-                )}
-              </div>
-
-              {groupName && (
-                <div className="mt-2">
-                  <Badge bg="secondary">{groupName}</Badge>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
+  const byDay = DAY_OF_WEEK_ORDER.reduce(
+    (acc, day) => {
+      const items = schedule
+        .filter((item) => getDayOfWeek(item.startDateTime) === day)
+        .sort(
+          (a, b) =>
+            new Date(a.startDateTime).getTime() -
+            new Date(b.startDateTime).getTime()
         );
-      })}
+      if (items.length > 0) acc.push({ day, items });
+      return acc;
+    },
+    [] as { day: DayOfWeek; items: UpcomingScheduleDto[] }[]
+  );
+
+  return (
+    <div className="d-flex flex-column gap-3">
+      {groupName && (
+        <div>
+          <Badge bg="secondary">{groupName}</Badge>
+        </div>
+      )}
+
+      {byDay.map(({ day, items }) => (
+        <Card key={day}>
+          <Card.Header>
+            <strong>{DAY_OF_WEEK_LABELS[day]}</strong>
+            <Badge bg="secondary" className="ms-2">
+              {items.length}
+            </Badge>
+          </Card.Header>
+          <Card.Body className="p-0">
+            <Table responsive hover className="mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th style={{ width: '140px' }}>Время</th>
+                  <th style={{ width: '120px' }}>Дата</th>
+                  <th>Дисциплина</th>
+                  <th>Преподаватель</th>
+                  <th style={{ width: '120px' }}>Аудитория</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => {
+                  const today = isToday(item.startDateTime);
+                  return (
+                    <tr key={item.scheduleId}>
+                      <td>
+                        {formatTime(item.startDateTime)} —{' '}
+                        {formatTime(item.endDateTime)}
+                      </td>
+                      <td>
+                        {formatDate(item.startDateTime)}
+                        {today && (
+                          <Badge bg="success" className="ms-2">
+                            Сегодня
+                          </Badge>
+                        )}
+                      </td>
+                      <td>{item.disciplineName}</td>
+                      <td>{item.teacherName || '—'}</td>
+                      <td>{item.room || '—'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </Card.Body>
+        </Card>
+      ))}
     </div>
   );
 };

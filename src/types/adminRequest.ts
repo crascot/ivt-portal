@@ -11,6 +11,14 @@ export type AdminRequest = {
   enabled: boolean;
 };
 
+export type PendingUsersType = {
+  id: number;
+  fullName: string;
+  email: string;
+  roles: { id: number; name: RoleEnum }[];
+  status: string;
+};
+
 enum UserStatus {
   PENDING,
   APPROVED,

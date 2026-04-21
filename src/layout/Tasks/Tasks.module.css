@@ -1,10 +1,339 @@
 .tasks {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.header h1 {
+  margin-bottom: 0;
 }
 
 .header p {
-  margin: 0;
+  color: var(--bs-secondary-color, #6c757d);
+  margin-bottom: 0;
+}
+
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.taskCard {
+  transition: box-shadow 0.2s ease;
+}
+
+.taskCard:hover {
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+}
+
+.attachmentList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.attachmentItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.375rem;
+  background-color: var(--bs-light, #f8f9fa);
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.attachmentItem:hover {
+  background-color: var(--bs-gray-200, #e9ecef);
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.imageItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.imageThumbButton {
+  width: 100%;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: transparent;
+  padding: 0;
+}
+
+.imageThumbButton:disabled {
+  cursor: not-allowed;
+}
+
+.imageThumb {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+}
+
+.imageThumbPlaceholder {
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bs-secondary-color, #6c757d);
+  background-color: var(--bs-light, #f8f9fa);
+  font-size: 0.875rem;
+}
+
+.previewModalDialog {
+  max-width: 95vw;
+}
+
+.previewModalContent {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+.previewModalBody {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh;
+}
+
+.previewFullImage {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+.submitStub {
+  padding: 1.5rem;
+  text-align: center;
+  border: 2px dashed var(--bs-border-color, #dee2e6);
+  border-radius: 0.5rem;
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+.taskWithReports {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.studentTasks {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.filters {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 0.5rem;
+  background-color: var(--bs-body-bg, #fff);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.statusChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.statusChip {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  font-size: 0.85rem;
+  cursor: pointer;
+  background-color: var(--bs-light, #f8f9fa);
+  color: #495057;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.statusChip:hover {
+  border-color: var(--bs-border-color, #dee2e6);
+}
+
+.statusChipActive {
+  font-weight: 600;
+  border-color: currentColor;
+}
+
+.statusSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.statusSummaryChip {
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  background-color: var(--bs-light, #f8f9fa);
+  border: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+}
+
+.overdueBadge {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: rgba(220, 53, 69, 0.12);
+  color: #b02a37;
+  border: 1px solid rgba(220, 53, 69, 0.35);
+}
+
+.taskHeaderCard {
+  cursor: pointer;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  background-color: var(--bs-body-bg, #fff);
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+  text-align: left;
+}
+
+.taskHeaderCard:hover {
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+}
+
+.taskDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+
+/* status-specific colors for chips and summary badges */
+.status_NOT_SUBMITTED {
+  color: #495057;
+}
+.status_UNDER_REVIEW {
+  color: #0d6efd;
+}
+.status_NEEDS_REWORK {
+  color: #b86e00;
+}
+.status_ACCEPTED {
   color: #6c757d;
+}
+.status_ACCEPTED_LATE {
+  color: #6c757d;
+}
+
+.statusBadge.status_NOT_SUBMITTED {
+  background-color: rgba(108, 117, 125, 0.12);
+  color: #495057;
+}
+.statusBadge.status_UNDER_REVIEW {
+  background-color: rgba(13, 110, 253, 0.12);
+  color: #0d6efd;
+}
+.statusBadge.status_NEEDS_REWORK {
+  background-color: rgba(255, 152, 0, 0.18);
+  color: #a05a00;
+}
+.statusBadge.status_ACCEPTED {
+  background-color: rgba(25, 135, 84, 0.12);
+  color: #198754;
+}
+.statusBadge.status_ACCEPTED_LATE {
+  background-color: rgba(108, 117, 125, 0.15);
+  color: #495057;
+}
+
+/* card-level color accents */
+.card_NOT_SUBMITTED .taskHeaderCard {
+  border-left: 4px solid #6c757d;
+}
+.card_UNDER_REVIEW .taskHeaderCard {
+  border-left: 4px solid #0d6efd;
+}
+.card_NEEDS_REWORK .taskHeaderCard {
+  border-left: 4px solid #ff8c00;
+  background-color: rgba(255, 152, 0, 0.04);
+}
+.card_ACCEPTED .taskHeaderCard {
+  border-left: 4px solid #adb5bd;
+  background-color: rgba(233, 236, 239, 0.55);
+  opacity: 0.85;
+}
+.card_ACCEPTED_LATE .taskHeaderCard {
+  border-left: 4px solid #868e96;
+  background-color: rgba(233, 236, 239, 0.55);
+  opacity: 0.85;
+}
+.card_overdue.card_NOT_SUBMITTED .taskHeaderCard {
+  border-left: 4px solid #dc3545;
+  background-color: rgba(220, 53, 69, 0.05);
+}
+
+.reportPanel {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 0.5rem;
+  background-color: var(--bs-body-bg, #fff);
+}
+
+.reportList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reportItem {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 0.5rem;
+  background-color: var(--bs-light, #f8f9fa);
+}
+
+.teacherComment {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--bs-warning, #ffc107);
+  background-color: rgba(255, 193, 7, 0.08);
+  border-radius: 0.25rem;
+}
+
+.reviewForm {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--bs-border-color, #dee2e6);
 }

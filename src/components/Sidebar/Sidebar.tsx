@@ -19,29 +19,33 @@ const roleNavItems: Record<string, NavItem[]> = {
   STUDENT: [
     { label: 'Расписание', to: ROUTES.SCHEDULE },
     { label: 'Задания', to: ROUTES.TASKS },
+    { label: 'УММ', to: ROUTES.UMM },
   ],
   TEACHER: [
     { label: 'Расписание', to: ROUTES.SCHEDULE },
     { label: 'Задания', to: ROUTES.TASKS },
+    { label: 'УММ', to: ROUTES.UMM },
   ],
   ADMIN: [
     { label: 'Заявки', to: ROUTES.ADMIN_PENDING_USERS },
     { label: 'Группы', to: ROUTES.ADMIN_GROUPS },
     { label: 'Дисциплины', to: ROUTES.ADMIN_DISCIPLINES },
     { label: 'Расписание', to: ROUTES.SCHEDULE },
-    { label: 'Поиск заданий', to: ROUTES.TASKS },
+    { label: 'Задания', to: ROUTES.TASKS },
+    { label: 'УММ', to: ROUTES.UMM },
   ],
   GROUP_LEADER: [
     { label: 'Расписание', to: ROUTES.SCHEDULE },
     { label: 'Задания', to: ROUTES.TASKS },
+    { label: 'УММ', to: ROUTES.UMM },
   ],
 };
 
 export const Sidebar = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const navItems = [
-    ...commonNavItems,
+    ...(!isAuthenticated ? commonNavItems : []),
     ...(user?.role ? (roleNavItems[user.role] ?? []) : []),
   ];
 

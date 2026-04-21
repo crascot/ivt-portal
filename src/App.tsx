@@ -16,11 +16,13 @@ import PendingUsers from '@pages/pending-users';
 import Groups from '@pages/groups';
 import Disciplines from '@pages/discipline';
 import NotFound from '@pages/not-found';
+import Tasks from '@pages/tasks';
+import Umm from '@pages/umm';
+import UmmDetail from '@pages/umm-detail';
 
 import { ROUTES } from '@utils/routes';
 import { RoleEnum } from '@entities/role-enum';
 import Schedule from '@pages/schedule';
-import Tasks from '@pages/tasks';
 
 const App = () => {
   return (
@@ -55,6 +57,8 @@ const App = () => {
                   <Route path={ROUTES.PROFILE} element={<Profile />} />
                   <Route path={ROUTES.SCHEDULE} element={<Schedule />} />
                   <Route path={ROUTES.TASKS} element={<Tasks />} />
+                  <Route path={ROUTES.UMM} element={<Umm />} />
+                  <Route path={ROUTES.UMM_DETAIL} element={<UmmDetail />} />
                 </Route>
 
                 <Route
