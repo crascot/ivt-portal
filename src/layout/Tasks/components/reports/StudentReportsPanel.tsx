@@ -44,6 +44,7 @@ export const StudentReportsPanel = ({
     deleteReport,
     deleteAttachment,
     downloadAttachment,
+    getAttachmentBlob,
   } = useStudentReports(taskId, studentId);
 
   const runAndNotify = async (action: () => Promise<void>) => {
@@ -123,6 +124,7 @@ export const StudentReportsPanel = ({
               <ReportAttachmentsList
                 attachments={report.attachments}
                 onDownload={downloadAttachment}
+                onGetPreviewBlob={getAttachmentBlob}
                 onDelete={
                   canEditReport(report)
                     ? (id) => void runAndNotify(() => deleteAttachment(id))

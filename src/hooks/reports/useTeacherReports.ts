@@ -106,6 +106,10 @@ export const useTeacherReports = (
     [setPartial]
   );
 
+  const getAttachmentBlob = useCallback(async (attachmentId: number) => {
+    return teacherApi.getReportAttachmentBlob(attachmentId);
+  }, []);
+
   useEffect(() => {
     if (taskId != null) {
       load();
@@ -119,5 +123,6 @@ export const useTeacherReports = (
     markChecked,
     deleteAttachment,
     downloadAttachment,
+    getAttachmentBlob,
   };
 };

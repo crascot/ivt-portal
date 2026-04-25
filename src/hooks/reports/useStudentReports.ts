@@ -119,6 +119,10 @@ export const useStudentReports = (
     [setPartial]
   );
 
+  const getAttachmentBlob = useCallback(async (attachmentId: number) => {
+    return studentApi.getReportAttachmentBlob(attachmentId);
+  }, []);
+
   useEffect(() => {
     if (taskId != null && studentId != null) {
       load();
@@ -132,5 +136,6 @@ export const useStudentReports = (
     deleteReport,
     deleteAttachment,
     downloadAttachment,
+    getAttachmentBlob,
   };
 };
