@@ -21,11 +21,13 @@ const roleNavItems: Record<string, NavItem[]> = {
   STUDENT: [
     { label: 'Расписание', to: ROUTES.SCHEDULE },
     { label: 'Задания', to: ROUTES.TASKS },
+    { label: 'История уведомлений', to: ROUTES.NOTIFICATIONS_HISTORY },
     { label: 'УММ', to: ROUTES.UMM },
   ],
   TEACHER: [
     { label: 'Расписание', to: ROUTES.SCHEDULE },
     { label: 'Задания', to: ROUTES.TASKS },
+    { label: 'История уведомлений', to: ROUTES.NOTIFICATIONS_HISTORY },
     { label: 'УММ', to: ROUTES.UMM },
   ],
   ADMIN: [
@@ -39,6 +41,7 @@ const roleNavItems: Record<string, NavItem[]> = {
   GROUP_LEADER: [
     { label: 'Расписание', to: ROUTES.SCHEDULE },
     { label: 'Задания', to: ROUTES.TASKS },
+    { label: 'История уведомлений', to: ROUTES.NOTIFICATIONS_HISTORY },
     { label: 'УММ', to: ROUTES.UMM },
   ],
 };
@@ -46,15 +49,16 @@ const roleNavItems: Record<string, NavItem[]> = {
 export const Sidebar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const { unseenCount, markAllAsSeen } = useAnnouncements();
+  const { unseenCount } = useAnnouncements();
   const canSeeAnnouncements =
-    user?.role === RoleEnum.STUDENT || user?.role === RoleEnum.GROUP_LEADER;
+    user?.role === RoleEnum.STUDENT ||
+    user?.role === RoleEnum.GROUP_LEADER ||
+    user?.role === RoleEnum.TEACHER;
   const shouldShowAnnouncements =
     isAuthenticated && canSeeAnnouncements && unseenCount > 0;
 
   const handleAnnouncementClick = () => {
-    void markAllAsSeen();
-    navigate(ROUTES.TASKS);
+    navigate(ROUTES.NOTIFICATIONS_HISTORY);
   };
 
   const navItems = [
@@ -90,10 +94,10 @@ export const Sidebar = () => {
           type="button"
           className={s.announcementRow}
           onClick={handleAnnouncementClick}
-          title="Перейти к заданиям"
+          title="Перейти к истории уведомлений"
         >
           <span className={s.announcementLabel}>
-            Новые уведомления о заданиях
+            Новые уведомления
           </span>
           <span className={s.announcementBadge}>{unseenCount}</span>
         </button>

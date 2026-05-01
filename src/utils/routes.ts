@@ -8,6 +8,7 @@ export enum ROUTES {
 
   SCHEDULE = '/schedule',
   TASKS = '/tasks',
+  NOTIFICATIONS_HISTORY = '/notifications-history',
   UMM = '/umm',
   UMM_DETAIL = '/umm/:id',
 

@@ -14,7 +14,7 @@ import { useAuth } from '@context/AuthContext';
 import { RoleEnum } from '@entities/role-enum';
 import { AnnouncementDto } from '@entities/announcementRequest';
 
-const POLL_INTERVAL_MS = 5 * 60 * 1000;
+const POLL_INTERVAL_MS = 60 * 1000;
 
 type AnnouncementContextValue = {
   announcements: AnnouncementDto[];
@@ -22,6 +22,7 @@ type AnnouncementContextValue = {
   isLoading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
+  getHistory: () => Promise<AnnouncementDto[]>;
   markAsSeen: (announcementId: number) => Promise<void>;
   markAllAsSeen: () => Promise<void>;
 };
@@ -34,6 +35,11 @@ type Props = {
   children: ReactNode;
 };
 
+const isStudentRole = (role: RoleEnum | undefined) =>
+  role === RoleEnum.STUDENT || role === RoleEnum.GROUP_LEADER;
+
+const isTeacherRole = (role: RoleEnum | undefined) => role === RoleEnum.TEACHER;
+
 export const AnnouncementProvider = ({ children }: Props) => {
   const { isAuthenticated, user } = useAuth();
   const [announcements, setAnnouncements] = useState<AnnouncementDto[]>([]);
@@ -41,8 +47,9 @@ export const AnnouncementProvider = ({ children }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
-  const isSupportedRole =
-    user?.role === RoleEnum.STUDENT || user?.role === RoleEnum.GROUP_LEADER;
+  const studentEnabled = isStudentRole(user?.role);
+  const teacherEnabled = isTeacherRole(user?.role);
+  const isSupportedRole = studentEnabled || teacherEnabled;
 
   const resolveStudentScope = useCallback(async () => {
     const profile = await scheduleApi.getStudentProfile();
@@ -50,6 +57,30 @@ export const AnnouncementProvider = ({ children }: Props) => {
     setCurrentUserId(resolved.userId);
     return resolved;
   }, []);
+
+  const resolveTeacherScope = useCallback(async () => {
+    const profile = await scheduleApi.getTeacherProfile();
+    const resolved = { userId: profile.id, teacherId: profile.teacherId };
+    setCurrentUserId(resolved.userId);
+    return resolved;
+  }, []);
+
+  const resolveCurrentUserId = useCallback(async (): Promise<number> => {
+    if (currentUserId != null) return currentUserId;
+    if (studentEnabled) {
+      return (await resolveStudentScope()).userId;
+    }
+    if (teacherEnabled) {
+      return (await resolveTeacherScope()).userId;
+    }
+    throw new Error('Unsupported role');
+  }, [
+    currentUserId,
+    studentEnabled,
+    teacherEnabled,
+    resolveStudentScope,
+    resolveTeacherScope,
+  ]);
 
   const loadAnnouncements = useCallback(
     async (silent = false) => {
@@ -66,11 +97,22 @@ export const AnnouncementProvider = ({ children }: Props) => {
       }
 
       try {
-        const profile = await resolveStudentScope();
-        const data = await announcementApi.getForGroupUser(
-          profile.groupId,
-          profile.userId
-        );
+        let data: AnnouncementDto[] = [];
+
+        if (studentEnabled) {
+          const profile = await resolveStudentScope();
+          data = await announcementApi.getForGroupUser(
+            profile.groupId,
+            profile.userId
+          );
+        } else if (teacherEnabled) {
+          const profile = await resolveTeacherScope();
+          data = await announcementApi.getLessonRemindersForTeacher(
+            profile.teacherId,
+            profile.userId
+          );
+        }
+
         setAnnouncements(data);
         setError(null);
       } catch {
@@ -81,7 +123,14 @@ export const AnnouncementProvider = ({ children }: Props) => {
         }
       }
     },
-    [isAuthenticated, isSupportedRole, resolveStudentScope]
+    [
+      isAuthenticated,
+      isSupportedRole,
+      studentEnabled,
+      teacherEnabled,
+      resolveStudentScope,
+      resolveTeacherScope,
+    ]
   );
 
   useEffect(() => {
@@ -109,7 +158,7 @@ export const AnnouncementProvider = ({ children }: Props) => {
       if (!isAuthenticated || !isSupportedRole) return;
 
       try {
-        const userId = currentUserId ?? (await resolveStudentScope()).userId;
+        const userId = await resolveCurrentUserId();
 
         await announcementApi.markAsSeen(announcementId, userId);
         setAnnouncements((prev) =>
@@ -123,7 +172,7 @@ export const AnnouncementProvider = ({ children }: Props) => {
         setError('Не удалось обновить статус уведомления');
       }
     },
-    [currentUserId, isAuthenticated, isSupportedRole, resolveStudentScope]
+    [isAuthenticated, isSupportedRole, resolveCurrentUserId]
   );
 
   const markAllAsSeen = useCallback(async () => {
@@ -142,19 +191,42 @@ export const AnnouncementProvider = ({ children }: Props) => {
     );
 
     try {
-      const userId = currentUserId ?? (await resolveStudentScope()).userId;
+      const userId = await resolveCurrentUserId();
       await Promise.all(
         unseenIds.map((id) => announcementApi.markAsSeen(id, userId))
       );
     } catch {
       setError('Не удалось обновить статус уведомлений');
     }
+  }, [announcements, isAuthenticated, isSupportedRole, resolveCurrentUserId]);
+
+  const getHistory = useCallback(async (): Promise<AnnouncementDto[]> => {
+    if (!isAuthenticated || !isSupportedRole) return [];
+
+    if (studentEnabled) {
+      const profile = await resolveStudentScope();
+      return announcementApi.getHistoryForGroupUser(
+        profile.groupId,
+        profile.userId
+      );
+    }
+
+    if (teacherEnabled) {
+      const profile = await resolveTeacherScope();
+      return announcementApi.getLessonReminderHistoryForTeacher(
+        profile.teacherId,
+        profile.userId
+      );
+    }
+
+    return [];
   }, [
-    announcements,
-    currentUserId,
     isAuthenticated,
     isSupportedRole,
+    studentEnabled,
+    teacherEnabled,
     resolveStudentScope,
+    resolveTeacherScope,
   ]);
 
   const unseenCount = useMemo(
@@ -169,6 +241,7 @@ export const AnnouncementProvider = ({ children }: Props) => {
       isLoading,
       error,
       refresh: () => loadAnnouncements(),
+      getHistory,
       markAsSeen,
       markAllAsSeen,
     }),
@@ -178,6 +251,7 @@ export const AnnouncementProvider = ({ children }: Props) => {
       isLoading,
       error,
       loadAnnouncements,
+      getHistory,
       markAsSeen,
       markAllAsSeen,
     ]
