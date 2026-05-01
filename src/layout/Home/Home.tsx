@@ -1,10 +1,10 @@
 import { Badge, Card, Col, Row } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
+import { useAuth } from '@context/AuthContext';
 import { ROUTES } from '@utils/routes';
 
 import s from './Home.module.css';
-import { useAuth } from '@context/AuthContext';
 
 const features = [
   {
@@ -35,6 +35,21 @@ const quickLinks = [
     to: ROUTES.ABOUT,
     buttonText: 'Подробнее',
     buttonClassName: 'btn btn-outline-primary',
+  },
+];
+
+const defaultHeroStats = [
+  {
+    value: '3',
+    label: 'основные роли',
+  },
+  {
+    value: '24/7',
+    label: 'доступ к материалам',
+  },
+  {
+    value: '1',
+    label: 'единая платформа',
   },
 ];
 
@@ -72,26 +87,14 @@ export const Home = () => {
         </div>
 
         <div className={s.heroStats}>
-          <Card className={s.statCard}>
-            <Card.Body>
-              <span className={s.statValue}>3</span>
-              <span className={s.statLabel}>основные роли</span>
-            </Card.Body>
-          </Card>
-
-          <Card className={s.statCard}>
-            <Card.Body>
-              <span className={s.statValue}>24/7</span>
-              <span className={s.statLabel}>доступ к материалам</span>
-            </Card.Body>
-          </Card>
-
-          <Card className={s.statCard}>
-            <Card.Body>
-              <span className={s.statValue}>1</span>
-              <span className={s.statLabel}>единая платформа</span>
-            </Card.Body>
-          </Card>
+          {defaultHeroStats.map((stat) => (
+            <Card key={stat.label} className={s.statCard}>
+              <Card.Body>
+                <span className={s.statValue}>{stat.value}</span>
+                <span className={s.statLabel}>{stat.label}</span>
+              </Card.Body>
+            </Card>
+          ))}
         </div>
       </section>
 

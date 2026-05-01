@@ -176,6 +176,11 @@ export const StudentTasks = ({
     return counts;
   }, [tasksWithInfo]);
 
+  const overdueCount = useMemo(
+    () => tasksWithInfo.filter(({ info }) => info.isOverdue).length,
+    [tasksWithInfo]
+  );
+
   const toggleExpanded = (taskId: number) => {
     setExpandedId((prev) => (prev === taskId ? null : taskId));
   };
@@ -186,6 +191,25 @@ export const StudentTasks = ({
 
   return (
     <div className={s.studentTasks}>
+      <div className={s.taskStats}>
+        <div className={s.taskStat}>
+          <span className={s.taskStatLabel}>Всего заданий</span>
+          <strong>{tasks.length}</strong>
+        </div>
+        <div
+          className={`${s.taskStat} ${
+            overdueCount > 0 ? s.taskStatDanger : ''
+          }`}
+        >
+          <span className={s.taskStatLabel}>Просрочено</span>
+          <strong>{overdueCount}</strong>
+        </div>
+        <div className={s.taskStat}>
+          <span className={s.taskStatLabel}>Показано</span>
+          <strong>{filteredAndSorted.length}</strong>
+        </div>
+      </div>
+
       <TaskFilters
         value={filters}
         disciplines={disciplines}

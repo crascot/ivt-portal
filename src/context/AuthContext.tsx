@@ -25,6 +25,7 @@ type JwtPayload = {
 
 type AuthUser = {
   email?: string;
+  fullName?: string;
   role?: RoleEnum;
   roles: RoleEnum[];
 };
@@ -133,9 +134,12 @@ const mapTokenToUser = (token: string | null): AuthUser | null => {
         : typeof payload.email === 'string'
           ? payload.email
           : undefined;
+    const fullName =
+      typeof payload.fullName === 'string' ? payload.fullName : undefined;
 
     return {
       email,
+      fullName,
       roles,
       role: getPrimaryRole(roles),
     };
