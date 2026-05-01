@@ -16,6 +16,16 @@ export type TaskDto = {
   attachments: TaskAttachmentDto[];
 };
 
+export type TaskStatisticsDto = {
+  totalTasks: number;
+  overdueTasks: number;
+  tasksWithoutReports?: number;
+  pendingReviewReports?: number;
+  checkedReports?: number;
+  acceptedReports?: number;
+  nextDeadline?: string | null;
+};
+
 export type TaskFormValues = {
   title: string;
   description: string;

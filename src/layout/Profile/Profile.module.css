@@ -1,0 +1,231 @@
+.profilePage {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.header h1 {
+  margin: 8px 0 4px;
+}
+
+.header p {
+  margin: 0;
+  color: var(--secondary-color);
+}
+
+.roleBadge {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.profileGrid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(320px, 1.2fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.profileCard {
+  height: 100%;
+  border: 1px solid rgba(52, 58, 64, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.05);
+}
+
+.profileCard :global(.card-body) {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.chartCard {
+  min-height: 360px;
+}
+
+.cardTitle {
+  margin-bottom: 0;
+  color: var(--text-color);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.infoItem {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(52, 58, 64, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoItem:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.infoItem span {
+  color: var(--secondary-color);
+  font-size: 0.88rem;
+}
+
+.infoItem strong {
+  color: var(--text-color);
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.chartCardDanger {
+  border-color: rgba(220, 53, 69, 0.28);
+  background-color: rgba(220, 53, 69, 0.04);
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.chartHeader span {
+  color: var(--secondary-color);
+  font-size: 0.9rem;
+}
+
+.chartHeader strong {
+  color: var(--text-color);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.chartBody {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+
+.donutChart {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background:
+    conic-gradient(
+      #dc3545 0 var(--overdue-angle),
+      #20c997 var(--overdue-angle) 360deg
+    );
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.donutChart::after {
+  content: '';
+  position: absolute;
+  width: 106px;
+  height: 106px;
+  border-radius: 50%;
+  background-color: var(--background-color);
+  box-shadow: inset 0 0 0 1px rgba(52, 58, 64, 0.08);
+}
+
+.donutCenter {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.donutCenter strong {
+  color: var(--text-color);
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.donutCenter span {
+  color: var(--secondary-color);
+  font-size: 0.78rem;
+}
+
+.chartLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.legendItem {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  color: var(--secondary-color);
+  font-size: 0.95rem;
+}
+
+.legendItem strong {
+  color: var(--text-color);
+  font-size: 1.05rem;
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legendOk {
+  background-color: #20c997;
+}
+
+.legendDanger {
+  background-color: #dc3545;
+}
+
+.statError {
+  color: #b02a37;
+  font-size: 0.9rem;
+}
+
+@media (--laptop) {
+  .profileGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (--mobile) {
+  .header {
+    flex-direction: column;
+  }
+
+  .header :global(.btn) {
+    width: 100%;
+  }
+
+  .profileCard :global(.card-body) {
+    padding: 20px;
+  }
+
+  .chartBody {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .chartLegend {
+    width: 100%;
+  }
+}

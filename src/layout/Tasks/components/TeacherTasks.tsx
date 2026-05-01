@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Button, Card, Collapse } from 'react-bootstrap';
 
 import { DisciplineShort, TeacherShort } from '@entities/scheduleRequest';
@@ -49,6 +49,12 @@ const formatDate = (iso: string | null): string => {
   });
 };
 
+const isTaskDeadlinePassed = (task: TaskDto): boolean => {
+  if (!task.deadline) return false;
+  const deadlineTime = new Date(task.deadline).getTime();
+  return Number.isFinite(deadlineTime) && deadlineTime < Date.now();
+};
+
 export const TeacherTasks = ({
   tasks,
   disciplines,
@@ -65,6 +71,10 @@ export const TeacherTasks = ({
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const overdueCount = useMemo(
+    () => tasks.filter(isTaskDeadlinePassed).length,
+    [tasks]
+  );
 
   const handleCreate = async (data: {
     title: string;
@@ -160,74 +170,96 @@ export const TeacherTasks = ({
       {tasks.length === 0 ? (
         <Alert variant="light">Заданий по этой дисциплине пока нет</Alert>
       ) : (
-        <div className={s.taskList}>
-          {tasks.map((task) => {
-            const isExpanded = expandedId === task.id;
+        <>
+          <div className={s.taskStats}>
+            <div className={s.taskStat}>
+              <span className={s.taskStatLabel}>Всего заданий</span>
+              <strong>{tasks.length}</strong>
+            </div>
+            <div
+              className={`${s.taskStat} ${
+                overdueCount > 0 ? s.taskStatDanger : ''
+              }`}
+            >
+              <span className={s.taskStatLabel}>Просрочено</span>
+              <strong>{overdueCount}</strong>
+            </div>
+          </div>
 
-            return (
-              <div key={task.id} className={s.taskWithReports}>
-                <Card
-                  as="button"
-                  type="button"
-                  onClick={() =>
-                    setExpandedId((prev) => (prev === task.id ? null : task.id))
-                  }
-                  className={s.taskHeaderCard}
-                >
-                  <Card.Body className="p-3">
-                    <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-                      <div className="flex-grow-1 text-start">
-                        <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                          <strong>{task.title}</strong>
+          <div className={s.taskList}>
+            {tasks.map((task) => {
+              const isExpanded = expandedId === task.id;
+
+              return (
+                <div key={task.id} className={s.taskWithReports}>
+                  <Card
+                    as="button"
+                    type="button"
+                    onClick={() =>
+                      setExpandedId((prev) =>
+                        prev === task.id ? null : task.id
+                      )
+                    }
+                    className={s.taskHeaderCard}
+                  >
+                    <Card.Body className="p-3">
+                      <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                        <div className="flex-grow-1 text-start">
+                          <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                            <strong>{task.title}</strong>
+                          </div>
+                          <div className="text-muted small">
+                            <span>{task.disciplineName}</span>
+                            <span className="mx-1">·</span>
+                            <span>{task.teacherName}</span>
+                          </div>
+                          <div className="text-muted small mt-1">
+                            <span>Создано: {formatDate(task.createdAt)}</span>
+                            <span className="mx-2">·</span>
+                            <span>Дедлайн: {formatDate(task.deadline)}</span>
+                          </div>
                         </div>
-                        <div className="text-muted small">
-                          <span>{task.disciplineName}</span>
-                          <span className="mx-1">·</span>
-                          <span>{task.teacherName}</span>
-                        </div>
-                        <div className="text-muted small mt-1">
-                          <span>Создано: {formatDate(task.createdAt)}</span>
-                          <span className="mx-2">·</span>
-                          <span>Дедлайн: {formatDate(task.deadline)}</span>
-                        </div>
+                        <Button
+                          size="sm"
+                          variant={isExpanded ? 'secondary' : 'outline-primary'}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setExpandedId((prev) =>
+                              prev === task.id ? null : task.id
+                            );
+                          }}
+                        >
+                          {isExpanded ? 'Свернуть' : 'Открыть'}
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        variant={isExpanded ? 'secondary' : 'outline-primary'}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setExpandedId((prev) =>
-                            prev === task.id ? null : task.id
-                          );
-                        }}
-                      >
-                        {isExpanded ? 'Свернуть' : 'Открыть'}
-                      </Button>
-                    </div>
-                  </Card.Body>
-                </Card>
+                    </Card.Body>
+                  </Card>
 
-                <Collapse in={isExpanded} unmountOnExit>
-                  <div>
-                    <div className={s.taskDetails}>
-                      <TaskCard
-                        task={task}
-                        canEdit
-                        onEdit={handleEdit}
-                        onDelete={onDelete}
-                        onDownloadAttachment={onDownloadAttachment}
-                        onDeleteAttachment={onDeleteAttachment}
-                      />
-                      {teacherId != null && (
-                        <TeacherReportsPanel taskId={task.id} teacherId={teacherId} />
-                      )}
+                  <Collapse in={isExpanded} unmountOnExit>
+                    <div>
+                      <div className={s.taskDetails}>
+                        <TaskCard
+                          task={task}
+                          canEdit
+                          onEdit={handleEdit}
+                          onDelete={onDelete}
+                          onDownloadAttachment={onDownloadAttachment}
+                          onDeleteAttachment={onDeleteAttachment}
+                        />
+                        {teacherId != null && (
+                          <TeacherReportsPanel
+                            taskId={task.id}
+                            teacherId={teacherId}
+                          />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Collapse>
-              </div>
-            );
-          })}
-        </div>
+                  </Collapse>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

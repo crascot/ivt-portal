@@ -145,6 +145,44 @@
   gap: 1.25rem;
 }
 
+.taskStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.taskStat {
+  min-height: 78px;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 0.5rem;
+  background-color: var(--bs-body-bg, #fff);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.taskStat strong {
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--bs-body-color, #212529);
+}
+
+.taskStatLabel {
+  font-size: 0.82rem;
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+.taskStatDanger {
+  border-color: rgba(220, 53, 69, 0.35);
+  background-color: rgba(220, 53, 69, 0.05);
+}
+
+.taskStatDanger strong {
+  color: #b02a37;
+}
+
 .filters {
   padding: 1rem 1.25rem;
   border: 1px solid var(--bs-border-color, #dee2e6);
