@@ -43,7 +43,8 @@ export const ummApi = {
   async create(payload: UmmCreatePayload): Promise<UmmMaterialDto> {
     const formData = new FormData();
     formData.append('title', payload.title);
-    if (payload.description) formData.append('description', payload.description);
+    if (payload.description)
+      formData.append('description', payload.description);
     formData.append('disciplineId', String(payload.disciplineId));
     formData.append('authorId', String(payload.authorId));
     payload.urls.forEach((url) => {

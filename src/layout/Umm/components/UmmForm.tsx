@@ -2,10 +2,7 @@ import { useRef, useState } from 'react';
 import { Button, Col, Form, Row } from 'react-bootstrap';
 
 import { DisciplineShort, TeacherShort } from '@entities/scheduleRequest';
-import {
-  UmmMaterialDto,
-  UmmMaterialShortDto,
-} from '@entities/ummRequest';
+import { UmmMaterialDto, UmmMaterialShortDto } from '@entities/ummRequest';
 
 type EditingMaterial = UmmMaterialDto | UmmMaterialShortDto;
 

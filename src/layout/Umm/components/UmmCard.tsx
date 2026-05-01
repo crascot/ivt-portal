@@ -32,12 +32,7 @@ export const UmmCard = ({ material, canManage, onEdit, onDelete }: Props) => {
   const openDetails = () => navigate(buildDetailPath(material.id));
 
   return (
-    <Card
-      as="button"
-      type="button"
-      onClick={openDetails}
-      className={s.ummCard}
-    >
+    <Card as="button" type="button" onClick={openDetails} className={s.ummCard}>
       <Card.Body>
         <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
           <div className="flex-grow-1 text-start">

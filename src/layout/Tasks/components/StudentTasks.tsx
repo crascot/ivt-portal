@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Card, Collapse } from 'react-bootstrap';
+import { useSearchParams } from 'react-router-dom';
 
 import { DisciplineShort } from '@entities/scheduleRequest';
 import {
@@ -73,6 +74,33 @@ export const StudentTasks = ({
 }: Props) => {
   const [filters, setFilters] = useState<TaskFiltersValue>(emptyFilters);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [highlightedId, setHighlightedId] = useState<number | null>(null);
+  const taskRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const focusTaskIdParam = searchParams.get('taskId');
+
+  useEffect(() => {
+    if (!focusTaskIdParam) return;
+    const focusId = Number(focusTaskIdParam);
+    if (!Number.isFinite(focusId)) return;
+    if (!tasks.some((task) => task.id === focusId)) return;
+
+    setExpandedId(focusId);
+    setHighlightedId(focusId);
+
+    const node = taskRefs.current.get(focusId);
+    if (node) {
+      node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    const next = new URLSearchParams(searchParams);
+    next.delete('taskId');
+    setSearchParams(next, { replace: true });
+
+    const timer = window.setTimeout(() => setHighlightedId(null), 2000);
+    return () => window.clearTimeout(timer);
+  }, [focusTaskIdParam, tasks, searchParams, setSearchParams]);
 
   const tasksWithInfo = useMemo<
     { task: TaskDto; info: TaskStatusInfo }[]
@@ -186,16 +214,28 @@ export const StudentTasks = ({
         <div className={s.taskList}>
           {filteredAndSorted.map(({ task, info }) => {
             const isExpanded = expandedId === task.id;
+            const isHighlighted = highlightedId === task.id;
             const cardClass = [
               s.taskWithReports,
               s[`card_${info.status}`],
               info.isOverdue ? s.card_overdue : '',
+              isHighlighted ? s.taskFocusHighlight : '',
             ]
               .filter(Boolean)
               .join(' ');
 
             return (
-              <div key={task.id} className={cardClass}>
+              <div
+                key={task.id}
+                className={cardClass}
+                ref={(node) => {
+                  if (node) {
+                    taskRefs.current.set(task.id, node);
+                  } else {
+                    taskRefs.current.delete(task.id);
+                  }
+                }}
+              >
                 <Card
                   as="button"
                   type="button"

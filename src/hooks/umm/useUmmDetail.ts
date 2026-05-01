@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { ummApi } from '@api/ummApi';
-import {
-  UmmMaterialDto,
-  UmmUpdatePayload,
-} from '@entities/ummRequest';
+import { UmmMaterialDto, UmmUpdatePayload } from '@entities/ummRequest';
 
 type State = {
   material: UmmMaterialDto | null;

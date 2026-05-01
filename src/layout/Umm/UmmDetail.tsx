@@ -173,8 +173,7 @@ export const UmmDetail = () => {
               </Badge>
               <span className="text-muted small">
                 Создано {formatDate(material.createdAt)}
-                {material.updatedAt &&
-                material.updatedAt !== material.createdAt
+                {material.updatedAt && material.updatedAt !== material.createdAt
                   ? ` · обновлено ${formatDate(material.updatedAt)}`
                   : ''}
               </span>
@@ -235,10 +234,7 @@ export const UmmDetail = () => {
                         className={s.attachmentItem}
                         role="button"
                         onClick={() =>
-                          downloadAttachment(
-                            attachment.id,
-                            attachment.fileName
-                          )
+                          downloadAttachment(attachment.id, attachment.fileName)
                         }
                       >
                         {attachment.fileName}
@@ -268,11 +264,12 @@ export const UmmDetail = () => {
               </div>
             )}
 
-            {material.urls.length === 0 && material.attachments.length === 0 && (
-              <Alert variant="light" className="mb-0 mt-3">
-                В этом материале пока нет файлов и ссылок
-              </Alert>
-            )}
+            {material.urls.length === 0 &&
+              material.attachments.length === 0 && (
+                <Alert variant="light" className="mb-0 mt-3">
+                  В этом материале пока нет файлов и ссылок
+                </Alert>
+              )}
           </Card.Body>
         </Card>
       )}

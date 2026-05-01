@@ -233,6 +233,24 @@
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
 }
 
+.taskFocusHighlight {
+  outline: 2px solid rgba(13, 110, 253, 0.6);
+  outline-offset: 2px;
+  animation: taskFocusPulse 1.6s ease-in-out 1;
+}
+
+@keyframes taskFocusPulse {
+  0% {
+    outline-color: rgba(13, 110, 253, 0.85);
+  }
+  60% {
+    outline-color: rgba(13, 110, 253, 0.25);
+  }
+  100% {
+    outline-color: rgba(13, 110, 253, 0.6);
+  }
+}
+
 .taskDetails {
   display: flex;
   flex-direction: column;

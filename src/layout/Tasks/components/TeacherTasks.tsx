@@ -219,7 +219,10 @@ export const TeacherTasks = ({
                         onDeleteAttachment={onDeleteAttachment}
                       />
                       {teacherId != null && (
-                        <TeacherReportsPanel taskId={task.id} teacherId={teacherId} />
+                        <TeacherReportsPanel
+                          taskId={task.id}
+                          teacherId={teacherId}
+                        />
                       )}
                     </div>
                   </div>

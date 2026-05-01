@@ -1,9 +1,11 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 import { ROUTES } from '@utils/routes';
 import { UserBlock } from './UserBlock/UserBlock';
 import s from './Sidebar.module.css';
 import { useAuth } from '@context/AuthContext';
+import { useAnnouncements } from '@context/AnnouncementContext';
+import { RoleEnum } from '@entities/role-enum';
 
 type NavItem = {
   label: string;
@@ -42,7 +44,18 @@ const roleNavItems: Record<string, NavItem[]> = {
 };
 
 export const Sidebar = () => {
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { unseenCount, markAllAsSeen } = useAnnouncements();
+  const canSeeAnnouncements =
+    user?.role === RoleEnum.STUDENT || user?.role === RoleEnum.GROUP_LEADER;
+  const shouldShowAnnouncements =
+    isAuthenticated && canSeeAnnouncements && unseenCount > 0;
+
+  const handleAnnouncementClick = () => {
+    void markAllAsSeen();
+    navigate(ROUTES.TASKS);
+  };
 
   const navItems = [
     ...(!isAuthenticated ? commonNavItems : []),
@@ -71,6 +84,20 @@ export const Sidebar = () => {
       <div className={s.userSection}>
         <UserBlock />
       </div>
+
+      {shouldShowAnnouncements && (
+        <button
+          type="button"
+          className={s.announcementRow}
+          onClick={handleAnnouncementClick}
+          title="Перейти к заданиям"
+        >
+          <span className={s.announcementLabel}>
+            Новые уведомления о заданиях
+          </span>
+          <span className={s.announcementBadge}>{unseenCount}</span>
+        </button>
+      )}
 
       <div className={s.navSection}>
         <span className={s.sectionTitle}>Навигация</span>
