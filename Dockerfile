@@ -1,5 +1,8 @@
 FROM node:20-alpine AS builder
 
+ARG API_BASE_URL
+ENV API_BASE_URL=${API_BASE_URL}
+
 WORKDIR /app
 
 COPY package.json ./

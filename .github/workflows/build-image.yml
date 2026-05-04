@@ -34,6 +34,8 @@ jobs:
               with:
                   context: .
                   push: true
+                  build-args: |
+                      API_BASE_URL=http://95.217.88.31:8034
                   tags: |
                       ${{ env.IMAGE_NAME }}:latest
                       ${{ env.IMAGE_NAME }}:${{ github.sha }}
