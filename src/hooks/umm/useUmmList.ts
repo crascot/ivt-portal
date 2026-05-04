@@ -3,8 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ummApi } from '@api/ummApi';
 import { scheduleApi } from '@api/scheduleApi';
 import {
+  UmmCatalogFilters,
   UmmCreatePayload,
-  UmmFilters,
   UmmMaterialShortDto,
   UmmUpdatePayload,
 } from '@entities/ummRequest';
@@ -32,15 +32,18 @@ const initialState: State = {
   actionError: null,
 };
 
-export const emptyUmmFilters: UmmFilters = {
-  disciplineId: null,
+export const emptyUmmCatalogFilters: UmmCatalogFilters = {
   authorId: null,
   search: '',
 };
 
+function shouldFetchMaterials(filters: UmmCatalogFilters): boolean {
+  return Boolean(filters.search.trim()) || filters.authorId != null;
+}
+
 export const useUmmList = () => {
   const [state, setState] = useState<State>(initialState);
-  const [filters, setFilters] = useState<UmmFilters>(emptyUmmFilters);
+  const [filters, setFilters] = useState<UmmCatalogFilters>(emptyUmmCatalogFilters);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setPartial = useCallback(
@@ -49,11 +52,14 @@ export const useUmmList = () => {
   );
 
   const load = useCallback(
-    async (next: UmmFilters) => {
+    async (next: UmmCatalogFilters) => {
+      if (!shouldFetchMaterials(next)) {
+        setPartial({ materials: [], isLoading: false, error: null });
+        return;
+      }
       setPartial({ isLoading: true, error: null });
       try {
         const materials = await ummApi.list({
-          disciplineId: next.disciplineId,
           authorId: next.authorId,
           search: next.search,
         });
@@ -81,7 +87,7 @@ export const useUmmList = () => {
   }, [setPartial]);
 
   const updateFilters = useCallback(
-    (patch: Partial<UmmFilters>) => {
+    (patch: Partial<UmmCatalogFilters>) => {
       setFilters((prev) => {
         const next = { ...prev, ...patch };
         const isSearchOnlyChange =
@@ -110,9 +116,9 @@ export const useUmmList = () => {
       clearTimeout(searchTimerRef.current);
       searchTimerRef.current = null;
     }
-    setFilters(emptyUmmFilters);
-    void load(emptyUmmFilters);
-  }, [load]);
+    setFilters(emptyUmmCatalogFilters);
+    setPartial({ materials: [], error: null });
+  }, [setPartial]);
 
   const reload = useCallback(() => {
     void load(filters);
@@ -169,14 +175,13 @@ export const useUmmList = () => {
 
   useEffect(() => {
     void loadMeta();
-    void load(emptyUmmFilters);
     return () => {
       if (searchTimerRef.current) {
         clearTimeout(searchTimerRef.current);
         searchTimerRef.current = null;
       }
     };
-  }, [loadMeta, load]);
+  }, [loadMeta]);
 
   return {
     ...state,

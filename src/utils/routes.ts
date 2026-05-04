@@ -10,6 +10,7 @@ export enum ROUTES {
   TASKS = '/tasks',
   NOTIFICATIONS_HISTORY = '/notifications-history',
   UMM = '/umm',
+  UMM_DISCIPLINE = '/umm/discipline/:disciplineId',
   UMM_DETAIL = '/umm/:id',
 
   ADMIN_PENDING_USERS = '/admin/pending-users',
