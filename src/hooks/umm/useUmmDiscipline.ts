@@ -90,8 +90,7 @@ export const useUmmDiscipline = (disciplineId: number | null) => {
       if (disciplineId == null) return;
       setFilters((prev) => {
         const next = { ...prev, ...patch };
-        const searchOnly =
-          Object.keys(patch).length === 1 && 'search' in patch;
+        const searchOnly = Object.keys(patch).length === 1 && 'search' in patch;
         if (searchOnly) {
           scheduleSearchLoad(disciplineId, next);
         } else {

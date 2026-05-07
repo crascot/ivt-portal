@@ -284,15 +284,17 @@ export const UmmDiscipline = () => {
               <Form.Control
                 type="search"
                 value={filters.search}
-                onChange={(e) =>
-                  updateFilters({ search: e.target.value })
-                }
+                onChange={(e) => updateFilters({ search: e.target.value })}
                 placeholder="Название, описание, раздел, имя файла…"
               />
             </Form.Group>
           </Col>
           <Col md={1} className="d-flex justify-content-end">
-            <Button variant="outline-secondary" size="sm" onClick={resetFilters}>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={resetFilters}
+            >
               Сбросить
             </Button>
           </Col>

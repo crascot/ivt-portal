@@ -189,7 +189,7 @@ export const UmmDetail = () => {
                 {material.disciplineName}
               </Badge>
               <Badge bg="light" text="dark" className={s.metaChip}>
-                {UMM_KIND_LABELS[(material.materialKind ?? 'GENERAL')]}
+                {UMM_KIND_LABELS[material.materialKind ?? 'GENERAL']}
               </Badge>
               {material.section && (
                 <Badge bg="light" text="dark" className={s.metaChip}>

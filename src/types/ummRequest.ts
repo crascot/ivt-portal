@@ -1,10 +1,5 @@
 /** Соответствует enum на сервере */
-export type UmmMaterialKind =
-  | 'GENERAL'
-  | 'UMK'
-  | 'LECTURE'
-  | 'LAB'
-  | 'EXTRA';
+export type UmmMaterialKind = 'GENERAL' | 'UMK' | 'LECTURE' | 'LAB' | 'EXTRA';
 
 export const UMM_KIND_LABELS: Record<UmmMaterialKind, string> = {
   GENERAL: 'Общее',

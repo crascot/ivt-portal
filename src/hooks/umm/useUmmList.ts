@@ -43,7 +43,9 @@ function shouldFetchMaterials(filters: UmmCatalogFilters): boolean {
 
 export const useUmmList = () => {
   const [state, setState] = useState<State>(initialState);
-  const [filters, setFilters] = useState<UmmCatalogFilters>(emptyUmmCatalogFilters);
+  const [filters, setFilters] = useState<UmmCatalogFilters>(
+    emptyUmmCatalogFilters
+  );
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setPartial = useCallback(

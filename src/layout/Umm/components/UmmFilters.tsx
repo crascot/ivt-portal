@@ -12,12 +12,7 @@ type Props = {
   onReset: () => void;
 };
 
-export const UmmFilters = ({
-  value,
-  teachers,
-  onChange,
-  onReset,
-}: Props) => {
+export const UmmFilters = ({ value, teachers, onChange, onReset }: Props) => {
   return (
     <div className={s.filters}>
       <Row className="g-3 align-items-end">

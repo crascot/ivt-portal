@@ -182,7 +182,9 @@ export const UmmForm = ({
                 required
                 value={disciplineId ?? ''}
                 onChange={(e) =>
-                  setDisciplineId(e.target.value ? Number(e.target.value) : null)
+                  setDisciplineId(
+                    e.target.value ? Number(e.target.value) : null
+                  )
                 }
               >
                 <option value="">Выберите предмет</option>
