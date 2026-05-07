@@ -26,6 +26,30 @@ export type TaskStatisticsDto = {
   nextDeadline?: string | null;
 };
 
+export type TaskAnalyticsDto = {
+  submissionOverview: {
+    submitted: number;
+    overdue: number;
+  };
+  weeklySubmissions: {
+    weekStart: string;
+    label: string;
+    count: number;
+  }[];
+  disciplineAverageGrades: {
+    disciplineId: number;
+    disciplineName: string;
+    averageGrade: number;
+    gradedReports: number;
+  }[];
+  topStudents: {
+    studentId: number;
+    studentName: string;
+    averageGrade: number;
+    gradedReports: number;
+  }[];
+};
+
 export type TaskFormValues = {
   title: string;
   description: string;

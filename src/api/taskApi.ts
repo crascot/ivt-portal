@@ -1,9 +1,18 @@
-import { TaskDto, TaskStatisticsDto } from '@entities/taskRequest';
+import {
+  TaskAnalyticsDto,
+  TaskDto,
+  TaskStatisticsDto,
+} from '@entities/taskRequest';
 import api from '@utils/api';
 
 export const taskApi = {
   async getTaskStatistics(): Promise<TaskStatisticsDto> {
     const { data } = await api.get<TaskStatisticsDto>('/task/statistics');
+    return data;
+  },
+
+  async getTaskAnalytics(): Promise<TaskAnalyticsDto> {
+    const { data } = await api.get<TaskAnalyticsDto>('/task/analytics');
     return data;
   },
 
