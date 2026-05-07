@@ -74,7 +74,6 @@ export const Tasks = () => {
 
       {error && <Alert variant="danger">{error}</Alert>}
       {actionError && <Alert variant="danger">{actionError}</Alert>}
-
       {isLoading ? (
         <div className="d-flex align-items-center gap-2">
           <Spinner animation="border" size="sm" />

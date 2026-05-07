@@ -20,6 +20,7 @@ import Groups from '@pages/groups';
 import Disciplines from '@pages/discipline';
 import NotFound from '@pages/not-found';
 import Tasks from '@pages/tasks';
+import Statistics from '@pages/statistics';
 import Umm from '@pages/umm';
 import UmmDiscipline from '@pages/umm-discipline';
 import UmmDetail from '@pages/umm-detail';
@@ -65,6 +66,19 @@ const App = () => {
                     <Route path={ROUTES.PROFILE} element={<Profile />} />
                     <Route path={ROUTES.SCHEDULE} element={<Schedule />} />
                     <Route path={ROUTES.TASKS} element={<Tasks />} />
+                    <Route path={ROUTES.STATISTICS} element={<Statistics />} />
+                    <Route
+                      path={ROUTES.ADMIN_STATISTICS_DISCIPLINE}
+                      element={<Statistics />}
+                    />
+                    <Route
+                      path={ROUTES.ADMIN_STATISTICS_GROUP}
+                      element={<Statistics />}
+                    />
+                    <Route
+                      path={ROUTES.ADMIN_STATISTICS_STUDENT}
+                      element={<Statistics />}
+                    />
                     <Route
                       path={ROUTES.NOTIFICATIONS_HISTORY}
                       element={<NotificationsHistory />}

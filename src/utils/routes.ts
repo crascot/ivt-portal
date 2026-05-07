@@ -8,6 +8,10 @@ export enum ROUTES {
 
   SCHEDULE = '/schedule',
   TASKS = '/tasks',
+  STATISTICS = '/statistics',
+  ADMIN_STATISTICS_DISCIPLINE = '/statistics/admin/discipline/:disciplineId',
+  ADMIN_STATISTICS_GROUP = '/statistics/admin/discipline/:disciplineId/group/:groupId',
+  ADMIN_STATISTICS_STUDENT = '/statistics/admin/discipline/:disciplineId/group/:groupId/student/:studentId',
   NOTIFICATIONS_HISTORY = '/notifications-history',
   UMM = '/umm',
   UMM_DISCIPLINE = '/umm/discipline/:disciplineId',

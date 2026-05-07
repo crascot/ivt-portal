@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@context/AuthContext';
 import { RoleEnum } from '@entities/role-enum';
 import { DisciplineShort, TeacherShort } from '@entities/scheduleRequest';
-import { TaskDto } from '@entities/taskRequest';
+import { TaskAnalyticsDto, TaskDto } from '@entities/taskRequest';
 import { ReportDto } from '@entities/teacherRequest';
 import { taskApi } from '@api/taskApi';
 import { scheduleApi } from '@api/scheduleApi';
@@ -16,6 +16,7 @@ type TasksState = {
   teachers: TeacherShort[];
   /** Reports grouped by taskId for student/group-leader aggregate view. */
   reportsByTaskId: Record<number, ReportDto[]>;
+  analytics: TaskAnalyticsDto | null;
 
   selectedDisciplineId: number | null;
   teacherId: number | null;
@@ -23,6 +24,7 @@ type TasksState = {
 
   isLoading: boolean;
   isTasksLoading: boolean;
+  isAnalyticsLoading: boolean;
   isSubmitting: boolean;
 
   error: string | null;
@@ -34,11 +36,13 @@ const initialState: TasksState = {
   disciplines: [],
   teachers: [],
   reportsByTaskId: {},
+  analytics: null,
   selectedDisciplineId: null,
   teacherId: null,
   studentId: null,
   isLoading: false,
   isTasksLoading: false,
+  isAnalyticsLoading: false,
   isSubmitting: false,
   error: null,
   actionError: null,
@@ -172,6 +176,17 @@ export const useTasks = () => {
     }
   }, [role, setPartial, loadStudentAggregate]);
 
+  const loadAnalytics = useCallback(async () => {
+    if (!role) return;
+    setPartial({ isAnalyticsLoading: true });
+    try {
+      const analytics = await taskApi.getTaskAnalytics();
+      setPartial({ analytics, isAnalyticsLoading: false });
+    } catch {
+      setPartial({ analytics: null, isAnalyticsLoading: false });
+    }
+  }, [role, setPartial]);
+
   const loadTasks = useCallback(
     async (disciplineId: number) => {
       setPartial({
@@ -208,6 +223,7 @@ export const useTasks = () => {
     setPartial({ isTasksLoading: true, error: null });
     try {
       await loadStudentAggregate(state.studentId, state.disciplines);
+      await loadAnalytics();
     } catch {
       setPartial({
         error: 'Не удалось загрузить задания',
@@ -219,6 +235,7 @@ export const useTasks = () => {
     state.studentId,
     state.disciplines,
     loadStudentAggregate,
+    loadAnalytics,
     setPartial,
   ]);
 
@@ -230,11 +247,13 @@ export const useTasks = () => {
     if (state.selectedDisciplineId !== null) {
       loadTasks(state.selectedDisciplineId);
     }
+    void loadAnalytics();
   }, [
     isStudentView,
     reloadStudentTasks,
     state.selectedDisciplineId,
     loadTasks,
+    loadAnalytics,
   ]);
 
   const refreshTasksAfterTeacherMutation = useCallback(async () => {
@@ -266,6 +285,7 @@ export const useTasks = () => {
           files
         );
         await refreshTasksAfterTeacherMutation();
+        await loadAnalytics();
         setPartial({ isSubmitting: false });
       } catch {
         setPartial({
@@ -275,7 +295,7 @@ export const useTasks = () => {
         throw new Error('Не удалось создать задание');
       }
     },
-    [setPartial, refreshTasksAfterTeacherMutation]
+    [setPartial, refreshTasksAfterTeacherMutation, loadAnalytics]
   );
 
   const updateTask = useCallback(
@@ -293,6 +313,7 @@ export const useTasks = () => {
       try {
         await taskApi.updateTask(taskId, params);
         await refreshTasksAfterTeacherMutation();
+        await loadAnalytics();
         setPartial({ isSubmitting: false });
       } catch {
         setPartial({
@@ -302,7 +323,7 @@ export const useTasks = () => {
         throw new Error('Не удалось обновить задание');
       }
     },
-    [setPartial, refreshTasksAfterTeacherMutation]
+    [setPartial, refreshTasksAfterTeacherMutation, loadAnalytics]
   );
 
   const deleteTask = useCallback(
@@ -311,11 +332,12 @@ export const useTasks = () => {
       try {
         await taskApi.deleteTask(taskId);
         await refreshTasksAfterTeacherMutation();
+        await loadAnalytics();
       } catch {
         setPartial({ actionError: 'Не удалось удалить задание' });
       }
     },
-    [setPartial, refreshTasksAfterTeacherMutation]
+    [setPartial, refreshTasksAfterTeacherMutation, loadAnalytics]
   );
 
   const deleteAttachment = useCallback(
@@ -345,8 +367,9 @@ export const useTasks = () => {
   useEffect(() => {
     if (role) {
       loadInitialData();
+      loadAnalytics();
     }
-  }, [role, loadInitialData]);
+  }, [role, loadInitialData, loadAnalytics]);
 
   return {
     ...state,

@@ -19,6 +19,7 @@ import { RoleEnum } from '@entities/role-enum';
 type JwtPayload = {
   sub?: string;
   email?: string;
+  fullName?: unknown;
   role?: unknown;
   roles?: unknown;
 };

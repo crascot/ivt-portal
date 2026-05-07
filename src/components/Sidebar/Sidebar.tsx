@@ -21,12 +21,14 @@ const roleNavItems: Record<string, NavItem[]> = {
   STUDENT: [
     { label: 'Расписание', to: ROUTES.SCHEDULE },
     { label: 'Задания', to: ROUTES.TASKS },
+    { label: 'Статистика', to: ROUTES.STATISTICS },
     { label: 'История уведомлений', to: ROUTES.NOTIFICATIONS_HISTORY },
     { label: 'УММ', to: ROUTES.UMM },
   ],
   TEACHER: [
     { label: 'Расписание', to: ROUTES.SCHEDULE },
     { label: 'Задания', to: ROUTES.TASKS },
+    { label: 'Статистика', to: ROUTES.STATISTICS },
     { label: 'История уведомлений', to: ROUTES.NOTIFICATIONS_HISTORY },
     { label: 'УММ', to: ROUTES.UMM },
   ],
@@ -36,11 +38,13 @@ const roleNavItems: Record<string, NavItem[]> = {
     { label: 'Дисциплины', to: ROUTES.ADMIN_DISCIPLINES },
     { label: 'Расписание', to: ROUTES.SCHEDULE },
     { label: 'Задания', to: ROUTES.TASKS },
+    { label: 'Статистика', to: ROUTES.STATISTICS },
     { label: 'УММ', to: ROUTES.UMM },
   ],
   GROUP_LEADER: [
     { label: 'Расписание', to: ROUTES.SCHEDULE },
     { label: 'Задания', to: ROUTES.TASKS },
+    { label: 'Статистика', to: ROUTES.STATISTICS },
     { label: 'История уведомлений', to: ROUTES.NOTIFICATIONS_HISTORY },
     { label: 'УММ', to: ROUTES.UMM },
   ],
