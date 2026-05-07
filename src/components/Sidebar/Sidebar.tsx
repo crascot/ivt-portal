@@ -100,9 +100,7 @@ export const Sidebar = () => {
           onClick={handleAnnouncementClick}
           title="Перейти к истории уведомлений"
         >
-          <span className={s.announcementLabel}>
-            Новые уведомления
-          </span>
+          <span className={s.announcementLabel}>Новые уведомления</span>
           <span className={s.announcementBadge}>{unseenCount}</span>
         </button>
       )}

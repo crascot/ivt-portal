@@ -22,6 +22,7 @@ import NotFound from '@pages/not-found';
 import Tasks from '@pages/tasks';
 import Statistics from '@pages/statistics';
 import Umm from '@pages/umm';
+import UmmDiscipline from '@pages/umm-discipline';
 import UmmDetail from '@pages/umm-detail';
 import NotificationsHistory from '@pages/notifications-history';
 
@@ -83,6 +84,10 @@ const App = () => {
                       element={<NotificationsHistory />}
                     />
                     <Route path={ROUTES.UMM} element={<Umm />} />
+                    <Route
+                      path={ROUTES.UMM_DISCIPLINE}
+                      element={<UmmDiscipline />}
+                    />
                     <Route path={ROUTES.UMM_DETAIL} element={<UmmDetail />} />
                   </Route>
 

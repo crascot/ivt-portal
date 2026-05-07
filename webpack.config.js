@@ -1,8 +1,25 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
+const fs = require('fs');
 const path = require('path');
+const webpack = require('webpack');
+const dotenv = require('dotenv');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-module.exports = async () => {
+module.exports = async (env, argv) => {
+  const mode = argv.mode || 'development';
+  const envFile =
+    mode === 'production'
+      ? path.resolve(__dirname, '.env.production')
+      : path.resolve(__dirname, '.env.development');
+  if (fs.existsSync(envFile)) {
+    dotenv.config({ path: envFile });
+  }
+  const apiBaseUrl =
+    process.env.API_BASE_URL ||
+    (mode === 'production'
+      ? 'http://95.217.88.31:8034'
+      : 'http://localhost:8081');
+  const devServerPort = Number(process.env.PORT, 10) || 3000;
   const postcssPresetEnv = (await import('postcss-preset-env')).default;
   const postcssGlobalData = (await import('@csstools/postcss-global-data'))
     .default;
@@ -91,9 +108,12 @@ module.exports = async () => {
           collapseWhitespace: true,
         },
       }),
+      new webpack.DefinePlugin({
+        'process.env.API_BASE_URL': JSON.stringify(apiBaseUrl),
+      }),
     ],
     devServer: {
-      port: 3000,
+      port: devServerPort,
       hot: true,
       historyApiFallback: true,
       open: false,

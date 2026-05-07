@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Alert, Button, Card } from 'react-bootstrap';
 
 import { DisciplineShort, TeacherShort } from '@entities/scheduleRequest';
@@ -36,12 +36,6 @@ type Props = {
   onDeleteAttachment: (attachmentId: number) => Promise<void>;
 };
 
-const isTaskDeadlinePassed = (task: TaskDto): boolean => {
-  if (!task.deadline) return false;
-  const deadlineTime = new Date(task.deadline).getTime();
-  return Number.isFinite(deadlineTime) && deadlineTime < Date.now();
-};
-
 export const AdminTasks = ({
   tasks,
   disciplines,
@@ -55,10 +49,6 @@ export const AdminTasks = ({
 }: Props) => {
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskDto | null>(null);
-  const overdueCount = useMemo(
-    () => tasks.filter(isTaskDeadlinePassed).length,
-    [tasks]
-  );
 
   const handleCreate = async (data: {
     title: string;
@@ -154,36 +144,19 @@ export const AdminTasks = ({
       {tasks.length === 0 ? (
         <Alert variant="light">Заданий по этой дисциплине пока нет</Alert>
       ) : (
-        <>
-          <div className={s.taskStats}>
-            <div className={s.taskStat}>
-              <span className={s.taskStatLabel}>Всего заданий</span>
-              <strong>{tasks.length}</strong>
-            </div>
-            <div
-              className={`${s.taskStat} ${
-                overdueCount > 0 ? s.taskStatDanger : ''
-              }`}
-            >
-              <span className={s.taskStatLabel}>Просрочено</span>
-              <strong>{overdueCount}</strong>
-            </div>
-          </div>
-
-          <div className={s.taskList}>
-            {tasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                canEdit
-                onEdit={handleEdit}
-                onDelete={onDelete}
-                onDownloadAttachment={onDownloadAttachment}
-                onDeleteAttachment={onDeleteAttachment}
-              />
-            ))}
-          </div>
-        </>
+        <div className={s.taskList}>
+          {tasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              canEdit
+              onEdit={handleEdit}
+              onDelete={onDelete}
+              onDownloadAttachment={onDownloadAttachment}
+              onDeleteAttachment={onDeleteAttachment}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

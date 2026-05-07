@@ -2,7 +2,12 @@ import { useRef, useState } from 'react';
 import { Button, Col, Form, Row } from 'react-bootstrap';
 
 import { DisciplineShort, TeacherShort } from '@entities/scheduleRequest';
-import { UmmMaterialDto, UmmMaterialShortDto } from '@entities/ummRequest';
+import {
+  UMM_KIND_LABELS,
+  UmmMaterialDto,
+  UmmMaterialKind,
+  UmmMaterialShortDto,
+} from '@entities/ummRequest';
 
 type EditingMaterial = UmmMaterialDto | UmmMaterialShortDto;
 
@@ -11,6 +16,8 @@ type SubmitData = {
   description: string | null;
   disciplineId: number;
   authorId: number;
+  materialKind: UmmMaterialKind;
+  section: string | null;
   urls: string[];
   files: File[];
 };
@@ -19,6 +26,8 @@ type Props = {
   disciplines: DisciplineShort[];
   teachers: TeacherShort[];
   teacherId: number | null;
+  /** Если задан — дисциплина фиксирована (страница дисциплины) */
+  fixedDisciplineId?: number;
   editingMaterial: EditingMaterial | null;
   isSubmitting: boolean;
   showAuthorSelect: boolean;
@@ -26,10 +35,18 @@ type Props = {
   onCancel: () => void;
 };
 
+const kindFromEditing = (m: EditingMaterial | null): UmmMaterialKind => {
+  if (!m || !('materialKind' in m) || !m.materialKind) {
+    return 'GENERAL';
+  }
+  return m.materialKind;
+};
+
 export const UmmForm = ({
   disciplines,
   teachers,
   teacherId,
+  fixedDisciplineId,
   editingMaterial,
   isSubmitting,
   showAuthorSelect,
@@ -41,8 +58,12 @@ export const UmmForm = ({
     editingMaterial?.description ?? ''
   );
   const [disciplineId, setDisciplineId] = useState<number | null>(
-    editingMaterial?.disciplineId ?? null
+    fixedDisciplineId ?? editingMaterial?.disciplineId ?? null
   );
+  const [materialKind, setMaterialKind] = useState<UmmMaterialKind>(
+    kindFromEditing(editingMaterial)
+  );
+  const [section, setSection] = useState(editingMaterial?.section ?? '');
   const [selectedAuthorId, setSelectedAuthorId] = useState<number | null>(
     editingMaterial?.authorId ?? teacherId
   );
@@ -50,6 +71,11 @@ export const UmmForm = ({
   const [files, setFiles] = useState<File[]>([]);
   const [validated, setValidated] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fixedDisciplineName =
+    fixedDisciplineId != null
+      ? disciplines.find((d) => d.id === fixedDisciplineId)?.name
+      : null;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -61,7 +87,8 @@ export const UmmForm = ({
     e.preventDefault();
 
     const form = e.currentTarget;
-    const isValid = form.checkValidity() && disciplineId != null;
+    const resolvedDisciplineId = fixedDisciplineId ?? disciplineId;
+    const isValid = form.checkValidity() && resolvedDisciplineId != null;
     if (!isValid) {
       setValidated(true);
       return;
@@ -82,15 +109,19 @@ export const UmmForm = ({
       await onSubmit({
         title: title.trim(),
         description: description.trim() ? description.trim() : null,
-        disciplineId,
+        disciplineId: resolvedDisciplineId,
         authorId: resolvedAuthorId,
+        materialKind,
+        section: section.trim() ? section.trim() : null,
         urls: parsedUrls,
         files,
       });
       if (!editingMaterial) {
         setTitle('');
         setDescription('');
-        setDisciplineId(null);
+        setDisciplineId(fixedDisciplineId ?? null);
+        setMaterialKind('GENERAL');
+        setSection('');
         setUrlsText('');
         setFiles([]);
         setValidated(false);
@@ -108,6 +139,11 @@ export const UmmForm = ({
       // parent handles error display
     }
   };
+
+  const kindEntries = Object.entries(UMM_KIND_LABELS) as [
+    UmmMaterialKind,
+    string,
+  ][];
 
   return (
     <Form noValidate validated={validated} onSubmit={handleSubmit}>
@@ -129,26 +165,40 @@ export const UmmForm = ({
         </Col>
 
         <Col md={6}>
-          <Form.Group controlId="umm-discipline">
-            <Form.Label>Предмет</Form.Label>
-            <Form.Select
-              required
-              value={disciplineId ?? ''}
-              onChange={(e) =>
-                setDisciplineId(e.target.value ? Number(e.target.value) : null)
-              }
-            >
-              <option value="">Выберите предмет</option>
-              {disciplines.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </Form.Select>
-            <Form.Control.Feedback type="invalid">
-              Выберите предмет
-            </Form.Control.Feedback>
-          </Form.Group>
+          {fixedDisciplineId != null && fixedDisciplineName ? (
+            <Form.Group controlId="umm-discipline-fixed">
+              <Form.Label>Предмет</Form.Label>
+              <Form.Control
+                plaintext
+                readOnly
+                className="py-2"
+                value={fixedDisciplineName}
+              />
+            </Form.Group>
+          ) : (
+            <Form.Group controlId="umm-discipline">
+              <Form.Label>Предмет</Form.Label>
+              <Form.Select
+                required
+                value={disciplineId ?? ''}
+                onChange={(e) =>
+                  setDisciplineId(
+                    e.target.value ? Number(e.target.value) : null
+                  )
+                }
+              >
+                <option value="">Выберите предмет</option>
+                {disciplines.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </Form.Select>
+              <Form.Control.Feedback type="invalid">
+                Выберите предмет
+              </Form.Control.Feedback>
+            </Form.Group>
+          )}
         </Col>
 
         <Col xs={12}>
@@ -160,6 +210,39 @@ export const UmmForm = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Краткое описание материала"
+            />
+          </Form.Group>
+        </Col>
+
+        <Col md={6}>
+          <Form.Group controlId="umm-kind">
+            <Form.Label>Тип материала</Form.Label>
+            <Form.Select
+              value={materialKind}
+              onChange={(e) =>
+                setMaterialKind(e.target.value as UmmMaterialKind)
+              }
+            >
+              {kindEntries.map(([k, label]) => (
+                <option key={k} value={k}>
+                  {label}
+                </option>
+              ))}
+            </Form.Select>
+            <Form.Text className="text-muted">
+              Общее, УМК, лекции, лабораторные или дополнительные материалы
+            </Form.Text>
+          </Form.Group>
+        </Col>
+
+        <Col md={6}>
+          <Form.Group controlId="umm-section">
+            <Form.Label>Раздел курса</Form.Label>
+            <Form.Control
+              type="text"
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+              placeholder="Необязательно: тема модуля для фильтра на странице дисциплины"
             />
           </Form.Group>
         </Col>

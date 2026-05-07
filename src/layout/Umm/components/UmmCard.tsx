@@ -1,7 +1,11 @@
 import { Badge, Button, Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
-import { UmmMaterialShortDto } from '@entities/ummRequest';
+import {
+  UMM_KIND_LABELS,
+  UmmMaterialKind,
+  UmmMaterialShortDto,
+} from '@entities/ummRequest';
 import { ROUTES } from '@utils/routes';
 
 import s from '../Umm.module.css';
@@ -26,10 +30,17 @@ const formatDate = (iso: string | null): string => {
 const buildDetailPath = (id: number) =>
   ROUTES.UMM_DETAIL.replace(':id', String(id));
 
+const kindLabel = (k: UmmMaterialKind | undefined): string => {
+  if (!k) return UMM_KIND_LABELS.GENERAL;
+  return UMM_KIND_LABELS[k] ?? k;
+};
+
 export const UmmCard = ({ material, canManage, onEdit, onDelete }: Props) => {
   const navigate = useNavigate();
 
   const openDetails = () => navigate(buildDetailPath(material.id));
+
+  const kind = material.materialKind ?? 'GENERAL';
 
   return (
     <Card as="button" type="button" onClick={openDetails} className={s.ummCard}>
@@ -47,7 +58,15 @@ export const UmmCard = ({ material, canManage, onEdit, onDelete }: Props) => {
                 {material.description}
               </Card.Text>
             )}
-            <div className="d-flex gap-2 flex-wrap">
+            <div className="d-flex gap-2 flex-wrap align-items-center">
+              <Badge bg="light" text="dark" className={s.metaChip}>
+                {kindLabel(kind)}
+              </Badge>
+              {material.section && (
+                <Badge bg="light" text="dark" className={s.metaChip}>
+                  {material.section}
+                </Badge>
+              )}
               {material.attachmentsCount > 0 && (
                 <Badge bg="light" text="dark" className={s.metaChip}>
                   Файлов: {material.attachmentsCount}

@@ -7,7 +7,9 @@ import { scheduleApi } from '@api/scheduleApi';
 import { RoleEnum } from '@entities/role-enum';
 import { DisciplineShort, TeacherShort } from '@entities/scheduleRequest';
 import { useUmmDetail } from '@hooks/umm/useUmmDetail';
+import { UMM_KIND_LABELS, UmmMaterialKind } from '@entities/ummRequest';
 import { ROUTES } from '@utils/routes';
+import { ummDisciplinePath } from '@utils/ummRoutes';
 
 import { UmmForm } from './components/UmmForm';
 
@@ -75,9 +77,10 @@ export const UmmDetail = () => {
   const handleDelete = async () => {
     if (!material) return;
     if (!window.confirm(`Удалить материал "${material.title}"?`)) return;
+    const backId = material.disciplineId;
     try {
       await remove();
-      navigate(ROUTES.UMM);
+      navigate(ummDisciplinePath(backId));
     } catch {
       // error shown via actionError
     }
@@ -88,6 +91,8 @@ export const UmmDetail = () => {
     description: string | null;
     disciplineId: number;
     authorId: number;
+    materialKind: UmmMaterialKind;
+    section: string | null;
     urls: string[];
     files: File[];
   }) => {
@@ -95,6 +100,8 @@ export const UmmDetail = () => {
       title: data.title,
       description: data.description,
       disciplineId: data.disciplineId,
+      materialKind: data.materialKind,
+      section: data.section,
       urls: data.urls.length > 0 ? data.urls : undefined,
       files: data.files.length > 0 ? data.files : undefined,
     });
@@ -105,13 +112,26 @@ export const UmmDetail = () => {
     <div className={s.page}>
       <div className={s.header}>
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={() => navigate(ROUTES.UMM)}
-          >
-            ← Все материалы
-          </Button>
+          <div className="d-flex gap-2 flex-wrap">
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={() =>
+                material
+                  ? navigate(ummDisciplinePath(material.disciplineId))
+                  : navigate(ROUTES.UMM)
+              }
+            >
+              ← К дисциплине
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={() => navigate(ROUTES.UMM)}
+            >
+              Каталог УММ
+            </Button>
+          </div>
 
           {canManage && material && !isEditing && (
             <div className="d-flex gap-2">
@@ -168,6 +188,14 @@ export const UmmDetail = () => {
               <Badge bg="light" text="dark" className={s.metaChip}>
                 {material.disciplineName}
               </Badge>
+              <Badge bg="light" text="dark" className={s.metaChip}>
+                {UMM_KIND_LABELS[material.materialKind ?? 'GENERAL']}
+              </Badge>
+              {material.section && (
+                <Badge bg="light" text="dark" className={s.metaChip}>
+                  Раздел: {material.section}
+                </Badge>
+              )}
               <Badge bg="light" text="dark" className={s.metaChip}>
                 {material.authorName}
               </Badge>

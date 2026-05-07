@@ -1,17 +1,32 @@
-import { useEffect, useState } from 'react';
-import { Alert, Button, Card, Spinner } from 'react-bootstrap';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, Button, Card, Col, Row, Spinner } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
-import { useAuth } from '@context/AuthContext';
+import { ummApi } from '@api/ummApi';
 import { scheduleApi } from '@api/scheduleApi';
+import { useAuth } from '@context/AuthContext';
 import { RoleEnum } from '@entities/role-enum';
-import { UmmCreatePayload, UmmMaterialShortDto } from '@entities/ummRequest';
+import {
+  UmmCreatePayload,
+  UmmDisciplineStatDto,
+  UmmMaterialKind,
+  UmmMaterialShortDto,
+} from '@entities/ummRequest';
 import { useUmmList } from '@hooks/umm/useUmmList';
+import { ummDisciplinePath } from '@utils/ummRoutes';
 
 import { UmmCard } from './components/UmmCard';
 import { UmmFilters } from './components/UmmFilters';
 import { UmmForm } from './components/UmmForm';
 
 import s from './Umm.module.css';
+
+function showCatalogSearchPane(filters: {
+  search: string;
+  authorId: number | null;
+}): boolean {
+  return Boolean(filters.search.trim()) || filters.authorId != null;
+}
 
 export const Umm = () => {
   const { user } = useAuth();
@@ -24,6 +39,9 @@ export const Umm = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingMaterial, setEditingMaterial] =
     useState<UmmMaterialShortDto | null>(null);
+  const [disciplineStats, setDisciplineStats] = useState<
+    UmmDisciplineStatDto[]
+  >([]);
 
   const {
     materials,
@@ -42,6 +60,15 @@ export const Umm = () => {
     remove,
   } = useUmmList();
 
+  const loadDisciplineStats = useCallback(async () => {
+    try {
+      const stats = await ummApi.getDisciplineStats();
+      setDisciplineStats(stats);
+    } catch {
+      setDisciplineStats([]);
+    }
+  }, []);
+
   useEffect(() => {
     if (role === RoleEnum.TEACHER) {
       scheduleApi
@@ -53,11 +80,22 @@ export const Umm = () => {
     }
   }, [role]);
 
+  useEffect(() => {
+    void loadDisciplineStats();
+  }, [loadDisciplineStats]);
+
+  const refreshAll = useCallback(() => {
+    void loadDisciplineStats();
+    reload();
+  }, [loadDisciplineStats, reload]);
+
   const handleCreate = async (data: {
     title: string;
     description: string | null;
     disciplineId: number;
     authorId: number;
+    materialKind: UmmMaterialKind;
+    section: string | null;
     urls: string[];
     files: File[];
   }) => {
@@ -66,11 +104,14 @@ export const Umm = () => {
       description: data.description,
       disciplineId: data.disciplineId,
       authorId: data.authorId,
+      materialKind: data.materialKind,
+      section: data.section,
       urls: data.urls,
       files: data.files,
     };
     await create(payload);
     setShowForm(false);
+    void loadDisciplineStats();
   };
 
   const handleUpdate = async (data: {
@@ -78,6 +119,8 @@ export const Umm = () => {
     description: string | null;
     disciplineId: number;
     authorId: number;
+    materialKind: UmmMaterialKind;
+    section: string | null;
     urls: string[];
     files: File[];
   }) => {
@@ -86,10 +129,13 @@ export const Umm = () => {
       title: data.title,
       description: data.description,
       disciplineId: data.disciplineId,
-      urls: data.urls,
+      materialKind: data.materialKind,
+      section: data.section,
+      urls: data.urls.length > 0 ? data.urls : undefined,
       files: data.files.length > 0 ? data.files : undefined,
     });
     setEditingMaterial(null);
+    void loadDisciplineStats();
   };
 
   const handleEdit = (material: UmmMaterialShortDto) => {
@@ -102,6 +148,13 @@ export const Umm = () => {
     setEditingMaterial(null);
   };
 
+  const handleDelete = async (id: number) => {
+    await remove(id);
+    void loadDisciplineStats();
+  };
+
+  const searchActive = showCatalogSearchPane(filters);
+
   return (
     <div className={s.page}>
       <div className={s.header}>
@@ -109,13 +162,14 @@ export const Umm = () => {
           <div>
             <h1 className="mb-1">Учебно-методические материалы</h1>
             <p className="text-muted mb-0">
-              Библиотека лекций, документов и полезных ссылок от преподавателей
+              Выберите дисциплину или найдите материал по ключевым словам по
+              всем курсам
             </p>
           </div>
           <div className="d-flex gap-2">
             <Button
               variant="outline-primary"
-              onClick={reload}
+              onClick={refreshAll}
               disabled={isLoading}
             >
               Обновить
@@ -134,7 +188,6 @@ export const Umm = () => {
 
       <UmmFilters
         value={filters}
-        disciplines={disciplines}
         teachers={teachers}
         onChange={updateFilters}
         onReset={resetFilters}
@@ -176,27 +229,69 @@ export const Umm = () => {
         </Card>
       )}
 
-      {isLoading ? (
-        <div className="d-flex align-items-center gap-2">
-          <Spinner animation="border" size="sm" />
-          <span>Загрузка...</span>
-        </div>
-      ) : materials.length === 0 ? (
-        <Alert variant="light" className="mb-0">
-          Материалов не найдено
-        </Alert>
-      ) : (
-        <div className={s.cardList}>
-          {materials.map((material) => (
-            <UmmCard
-              key={material.id}
-              material={material}
-              canManage={canManage}
-              onEdit={canManage ? handleEdit : undefined}
-              onDelete={canManage ? remove : undefined}
-            />
-          ))}
-        </div>
+      {!searchActive && (
+        <section>
+          <h2 className="h5 mb-3">Дисциплины</h2>
+          {disciplineStats.length === 0 ? (
+            <Alert variant="light" className="mb-0">
+              Пока нет загруженных материалов. После публикации преподавателями
+              здесь появятся карточки дисциплин.
+            </Alert>
+          ) : (
+            <Row className="g-3">
+              {disciplineStats.map((row) => (
+                <Col key={row.disciplineId} md={6} lg={4}>
+                  <Card
+                    as={Link}
+                    to={ummDisciplinePath(row.disciplineId)}
+                    className={s.disciplineCard}
+                  >
+                    <Card.Body>
+                      <Card.Title className="h6 mb-2">
+                        {row.disciplineName}
+                      </Card.Title>
+                      <p className="text-muted small mb-0">
+                        Материалов: {row.materialCount}
+                      </p>
+                      <span className={s.disciplineCardHint}>
+                        Открыть каталог →
+                      </span>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          )}
+        </section>
+      )}
+
+      {searchActive && (
+        <section className="mt-4">
+          <h2 className="h5 mb-3">Результаты поиска</h2>
+          {isLoading ? (
+            <div className="d-flex align-items-center gap-2">
+              <Spinner animation="border" size="sm" />
+              <span>Загрузка...</span>
+            </div>
+          ) : materials.length === 0 ? (
+            <Alert variant="light" className="mb-0">
+              Ничего не найдено — измените запрос или выберите дисциплину в
+              каталоге выше.
+            </Alert>
+          ) : (
+            <div className={s.cardList}>
+              {materials.map((material) => (
+                <UmmCard
+                  key={material.id}
+                  material={material}
+                  canManage={canManage}
+                  onEdit={canManage ? handleEdit : undefined}
+                  onDelete={canManage ? handleDelete : undefined}
+                />
+              ))}
+            </div>
+          )}
+        </section>
       )}
     </div>
   );

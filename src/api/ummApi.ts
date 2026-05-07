@@ -1,6 +1,8 @@
 import {
   UmmCreatePayload,
+  UmmDisciplineStatDto,
   UmmMaterialDto,
+  UmmMaterialKind,
   UmmMaterialShortDto,
   UmmUpdatePayload,
 } from '@entities/ummRequest';
@@ -21,15 +23,33 @@ type ListParams = {
   disciplineId?: number | null;
   authorId?: number | null;
   search?: string;
+  materialKind?: UmmMaterialKind | null;
+  section?: string | null;
 };
 
 export const ummApi = {
+  async getDisciplineStats(): Promise<UmmDisciplineStatDto[]> {
+    const { data } = await api.get<UmmDisciplineStatDto[]>(
+      '/umm/meta/discipline-stats'
+    );
+    return data;
+  },
+
+  async getSectionsForDiscipline(disciplineId: number): Promise<string[]> {
+    const { data } = await api.get<string[]>('/umm/meta/sections', {
+      params: { disciplineId },
+    });
+    return data;
+  },
+
   async list(params: ListParams = {}): Promise<UmmMaterialShortDto[]> {
     const { data } = await api.get<UmmMaterialShortDto[]>('/umm', {
       params: {
         disciplineId: params.disciplineId ?? undefined,
         authorId: params.authorId ?? undefined,
         search: params.search?.trim() ? params.search.trim() : undefined,
+        materialKind: params.materialKind ?? undefined,
+        section: params.section?.trim() ? params.section.trim() : undefined,
       },
     });
     return data;
@@ -47,6 +67,10 @@ export const ummApi = {
       formData.append('description', payload.description);
     formData.append('disciplineId', String(payload.disciplineId));
     formData.append('authorId', String(payload.authorId));
+    formData.append('materialKind', payload.materialKind);
+    if (payload.section?.trim()) {
+      formData.append('section', payload.section.trim());
+    }
     payload.urls.forEach((url) => {
       if (url.trim()) formData.append('urls', url.trim());
     });
@@ -63,6 +87,11 @@ export const ummApi = {
       formData.append('description', payload.description ?? '');
     if (payload.disciplineId != null)
       formData.append('disciplineId', String(payload.disciplineId));
+    if (payload.materialKind != null)
+      formData.append('materialKind', payload.materialKind);
+    if (payload.section !== undefined) {
+      formData.append('section', payload.section ?? '');
+    }
     payload.urls?.forEach((url) => {
       if (url.trim()) formData.append('urls', url.trim());
     });

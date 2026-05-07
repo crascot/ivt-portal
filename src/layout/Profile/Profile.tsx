@@ -71,7 +71,7 @@ export const Profile = () => {
     if (!showTaskStats) return null;
 
     const totalTasks =
-      isStatsLoading || statsError ? 0 : taskStats?.totalTasks ?? 0;
+      isStatsLoading || statsError ? 0 : (taskStats?.totalTasks ?? 0);
     const overdueTasks =
       isStatsLoading || statsError
         ? 0
@@ -79,8 +79,7 @@ export const Profile = () => {
     const tasksWithoutOverdue = Math.max(totalTasks - overdueTasks, 0);
     const overduePercent =
       totalTasks > 0 ? Math.round((overdueTasks / totalTasks) * 100) : 0;
-    const overdueAngle =
-      totalTasks > 0 ? (overdueTasks / totalTasks) * 360 : 0;
+    const overdueAngle = totalTasks > 0 ? (overdueTasks / totalTasks) * 360 : 0;
     const totalTasksLabel =
       user?.role === RoleEnum.TEACHER ? 'заданий создано' : 'заданий назначено';
 
@@ -144,36 +143,48 @@ export const Profile = () => {
         {user.role === RoleEnum.TEACHER && (
           <Card className={s.profileCard}>
             <Card.Body>
-              <Card.Title className={s.cardTitle}>Статистика преподавателя</Card.Title>
+              <Card.Title className={s.cardTitle}>
+                Статистика преподавателя
+              </Card.Title>
               <div className={s.infoList}>
                 <div className={s.infoItem}>
                   <span>Всего заданий</span>
                   <strong>
-                    {isStatsLoading || statsError ? '—' : taskStats?.totalTasks ?? '—'}
+                    {isStatsLoading || statsError
+                      ? '—'
+                      : (taskStats?.totalTasks ?? '—')}
                   </strong>
                 </div>
                 <div className={s.infoItem}>
                   <span>На проверке</span>
                   <strong>
-                    {isStatsLoading || statsError ? '—' : taskStats?.pendingReviewReports ?? 0}
+                    {isStatsLoading || statsError
+                      ? '—'
+                      : (taskStats?.pendingReviewReports ?? 0)}
                   </strong>
                 </div>
                 <div className={s.infoItem}>
                   <span>Сдано</span>
                   <strong>
-                    {isStatsLoading || statsError ? '—' : taskStats?.acceptedReports ?? 0}
+                    {isStatsLoading || statsError
+                      ? '—'
+                      : (taskStats?.acceptedReports ?? 0)}
                   </strong>
                 </div>
                 <div className={s.infoItem}>
                   <span>Без отправок</span>
                   <strong>
-                    {isStatsLoading || statsError ? '—' : taskStats?.tasksWithoutReports ?? 0}
+                    {isStatsLoading || statsError
+                      ? '—'
+                      : (taskStats?.tasksWithoutReports ?? 0)}
                   </strong>
                 </div>
                 <div className={s.infoItem}>
                   <span>Ближайший дедлайн</span>
                   <strong>
-                    {isStatsLoading || statsError ? '—' : taskStats?.nextDeadline ?? '—'}
+                    {isStatsLoading || statsError
+                      ? '—'
+                      : (taskStats?.nextDeadline ?? '—')}
                   </strong>
                 </div>
               </div>

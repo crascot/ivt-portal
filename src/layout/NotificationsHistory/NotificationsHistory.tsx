@@ -108,7 +108,9 @@ export const NotificationsHistory = () => {
                     {announcement.seen ? 'Просмотрено' : 'Новое'}
                   </Badge>
                 </div>
-                <Card.Text className={s.content}>{announcement.content}</Card.Text>
+                <Card.Text className={s.content}>
+                  {announcement.content}
+                </Card.Text>
                 <div className={s.meta}>
                   <span>{announcement.disciplineName}</span>
                   <span>{announcement.teacherName}</span>
