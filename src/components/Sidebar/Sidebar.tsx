@@ -1,4 +1,16 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import {
+  FiBarChart2,
+  FiBell,
+  FiBookOpen,
+  FiCalendar,
+  FiClipboard,
+  FiHome,
+  FiInfo,
+  FiLayers,
+  FiUsers,
+} from 'react-icons/fi';
+import type { IconType } from 'react-icons';
 
 import { ROUTES } from '@utils/routes';
 import { UserBlock } from './UserBlock/UserBlock';
@@ -10,50 +22,78 @@ import { RoleEnum } from '@entities/role-enum';
 type NavItem = {
   label: string;
   to: string;
+  icon: IconType;
+};
+
+type SidebarProps = {
+  isOpen?: boolean;
+  onNavigate?: () => void;
 };
 
 const commonNavItems: NavItem[] = [
-  { label: 'Главная', to: ROUTES.MAIN },
-  { label: 'О портале', to: ROUTES.ABOUT },
+  { label: 'Главная', to: ROUTES.MAIN, icon: FiHome },
 ];
 
 const roleNavItems: Record<string, NavItem[]> = {
   STUDENT: [
-    { label: 'Расписание', to: ROUTES.SCHEDULE },
-    { label: 'Задания', to: ROUTES.TASKS },
-    { label: 'Статистика', to: ROUTES.STATISTICS },
-    { label: 'История уведомлений', to: ROUTES.NOTIFICATIONS_HISTORY },
-    { label: 'УММ', to: ROUTES.UMM },
+    { label: 'Расписание', to: ROUTES.SCHEDULE, icon: FiCalendar },
+    { label: 'Преподаватели', to: ROUTES.TEACHERS, icon: FiUsers },
+    { label: 'Задания', to: ROUTES.TASKS, icon: FiClipboard },
+    { label: 'Статистика', to: ROUTES.STATISTICS, icon: FiBarChart2 },
+    {
+      label: 'История уведомлений',
+      to: ROUTES.NOTIFICATIONS_HISTORY,
+      icon: FiBell,
+    },
+    { label: 'УММ', to: ROUTES.UMM, icon: FiLayers },
   ],
   TEACHER: [
-    { label: 'Расписание', to: ROUTES.SCHEDULE },
-    { label: 'Задания', to: ROUTES.TASKS },
-    { label: 'Статистика', to: ROUTES.STATISTICS },
-    { label: 'История уведомлений', to: ROUTES.NOTIFICATIONS_HISTORY },
-    { label: 'УММ', to: ROUTES.UMM },
+    { label: 'Расписание', to: ROUTES.SCHEDULE, icon: FiCalendar },
+    { label: 'Преподаватели', to: ROUTES.TEACHERS, icon: FiUsers },
+    { label: 'Задания', to: ROUTES.TASKS, icon: FiClipboard },
+    { label: 'Статистика', to: ROUTES.STATISTICS, icon: FiBarChart2 },
+    {
+      label: 'История уведомлений',
+      to: ROUTES.NOTIFICATIONS_HISTORY,
+      icon: FiBell,
+    },
+    { label: 'УММ', to: ROUTES.UMM, icon: FiLayers },
   ],
   ADMIN: [
-    { label: 'Заявки', to: ROUTES.ADMIN_PENDING_USERS },
-    { label: 'Группы', to: ROUTES.ADMIN_GROUPS },
-    { label: 'Дисциплины', to: ROUTES.ADMIN_DISCIPLINES },
-    { label: 'Расписание', to: ROUTES.SCHEDULE },
-    { label: 'Задания', to: ROUTES.TASKS },
-    { label: 'Статистика', to: ROUTES.STATISTICS },
-    { label: 'УММ', to: ROUTES.UMM },
+    { label: 'Заявки', to: ROUTES.ADMIN_PENDING_USERS, icon: FiClipboard },
+    { label: 'Группы', to: ROUTES.ADMIN_GROUPS, icon: FiUsers },
+    { label: 'Дисциплины', to: ROUTES.ADMIN_DISCIPLINES, icon: FiBookOpen },
+    { label: 'Расписание', to: ROUTES.SCHEDULE, icon: FiCalendar },
+    { label: 'Преподаватели', to: ROUTES.TEACHERS, icon: FiUsers },
+    { label: 'Задания', to: ROUTES.TASKS, icon: FiClipboard },
+    { label: 'Статистика', to: ROUTES.STATISTICS, icon: FiBarChart2 },
+    { label: 'УММ', to: ROUTES.UMM, icon: FiLayers },
   ],
   GROUP_LEADER: [
-    { label: 'Расписание', to: ROUTES.SCHEDULE },
-    { label: 'Задания', to: ROUTES.TASKS },
-    { label: 'Статистика', to: ROUTES.STATISTICS },
-    { label: 'История уведомлений', to: ROUTES.NOTIFICATIONS_HISTORY },
-    { label: 'УММ', to: ROUTES.UMM },
+    { label: 'Расписание', to: ROUTES.SCHEDULE, icon: FiCalendar },
+    { label: 'Преподаватели', to: ROUTES.TEACHERS, icon: FiUsers },
+    { label: 'Задания', to: ROUTES.TASKS, icon: FiClipboard },
+    { label: 'Статистика', to: ROUTES.STATISTICS, icon: FiBarChart2 },
+    {
+      label: 'История уведомлений',
+      to: ROUTES.NOTIFICATIONS_HISTORY,
+      icon: FiBell,
+    },
+    { label: 'УММ', to: ROUTES.UMM, icon: FiLayers },
   ],
 };
 
-export const Sidebar = () => {
+const aboutNavItem: NavItem = {
+  label: 'О портале',
+  to: ROUTES.ABOUT,
+  icon: FiInfo,
+};
+
+export const Sidebar = ({ isOpen = false, onNavigate }: SidebarProps) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { unseenCount } = useAnnouncements();
+  const AboutIcon = aboutNavItem.icon;
   const canSeeAnnouncements =
     user?.role === RoleEnum.STUDENT ||
     user?.role === RoleEnum.GROUP_LEADER ||
@@ -63,6 +103,7 @@ export const Sidebar = () => {
 
   const handleAnnouncementClick = () => {
     navigate(ROUTES.NOTIFICATIONS_HISTORY);
+    onNavigate?.();
   };
 
   const navItems = [
@@ -71,11 +112,12 @@ export const Sidebar = () => {
   ];
 
   return (
-    <aside className={s.sidebar}>
+    <aside id="main-sidebar" className={`${s.sidebar} ${isOpen ? s.open : ''}`}>
       <div className={s.header}>
         <NavLink
           to={ROUTES.MAIN}
           end
+          onClick={onNavigate}
           className={({ isActive }) =>
             `${s.brand} ${isActive ? s.brandActive : ''}`
           }
@@ -90,7 +132,7 @@ export const Sidebar = () => {
       </div>
 
       <div className={s.userSection}>
-        <UserBlock />
+        <UserBlock onNavigate={onNavigate} />
       </div>
 
       {shouldShowAnnouncements && (
@@ -109,18 +151,33 @@ export const Sidebar = () => {
         <span className={s.sectionTitle}>Навигация</span>
 
         <div className={s.linkList}>
-          {navItems.map(({ to, label }) => (
+          {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
+              onClick={onNavigate}
               className={({ isActive }) =>
                 `${s.navLink} ${isActive ? s.active : ''}`
               }
             >
-              {label}
+              <Icon className={s.navIcon} size={22} aria-hidden="true" />
+              <span>{label}</span>
             </NavLink>
           ))}
         </div>
+      </div>
+
+      <div className={s.footerSection}>
+        <NavLink
+          to={aboutNavItem.to}
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            `${s.navLink} ${s.footerLink} ${isActive ? s.active : ''}`
+          }
+        >
+          <AboutIcon className={s.navIcon} size={22} aria-hidden="true" />
+          <span>{aboutNavItem.label}</span>
+        </NavLink>
       </div>
     </aside>
   );

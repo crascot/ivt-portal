@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Alert, Button, Card } from 'react-bootstrap';
+import { FiPlus } from 'react-icons/fi';
 
 import {
   AddScheduleDto,
@@ -10,6 +11,8 @@ import {
 
 import { ScheduleForm } from './ScheduleForm';
 import { ScheduleTable } from './ScheduleTable';
+
+import s from '../Schedule.module.css';
 
 type Props = {
   groupId: number;
@@ -71,17 +74,18 @@ export const LeaderSchedule = ({
   };
 
   return (
-    <div className="d-flex flex-column gap-4">
+    <div className={s.scheduleStack}>
       {actionError && <Alert variant="danger">{actionError}</Alert>}
 
-      <Card>
+      <Card className={s.editorCard}>
         <Card.Body>
-          <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className={s.editorHeader}>
             <Card.Title className="mb-0">
               {editingItem ? 'Редактирование занятия' : 'Добавить занятие'}
             </Card.Title>
             {!showForm && (
               <Button onClick={() => setShowForm(true)}>
+                <FiPlus />
                 Добавить занятие
               </Button>
             )}
@@ -101,21 +105,22 @@ export const LeaderSchedule = ({
         </Card.Body>
       </Card>
 
-      <Card>
-        <Card.Body>
-          <Card.Title className="mb-3">
-            Расписание группы {groupName}
-          </Card.Title>
+      <section className={s.diarySection}>
+        <div className={s.sectionHeader}>
+          <div>
+            <h2>Расписание группы {groupName}</h2>
+            <p>Занятия сгруппированы по дням недели и времени начала.</p>
+          </div>
+        </div>
 
-          <ScheduleTable
-            schedule={schedule}
-            canEdit
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            isDeleting={isDeleting}
-          />
-        </Card.Body>
-      </Card>
+        <ScheduleTable
+          schedule={schedule}
+          canEdit
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          isDeleting={isDeleting}
+        />
+      </section>
     </div>
   );
 };

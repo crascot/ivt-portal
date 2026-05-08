@@ -6,8 +6,12 @@ export enum ROUTES {
   PROFILE = '/profile',
   PENDING_APPROVAL = '/pending-approval',
 
+  TEACHERS = '/teachers',
+  TEACHER_DETAIL = '/teachers/:teacherId',
+  TEACHER_SCHEDULE = '/teachers/:teacherId/schedule',
   SCHEDULE = '/schedule',
   TASKS = '/tasks',
+  TASK_DETAIL = '/tasks/:taskId',
   STATISTICS = '/statistics',
   ADMIN_STATISTICS_DISCIPLINE = '/statistics/admin/discipline/:disciplineId',
   ADMIN_STATISTICS_GROUP = '/statistics/admin/discipline/:disciplineId/group/:groupId',

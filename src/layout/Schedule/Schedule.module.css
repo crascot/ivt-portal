@@ -6,8 +6,9 @@
 
 .header {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .header h1 {
@@ -17,6 +18,327 @@
 .header p {
   color: var(--bs-secondary-color, #6c757d);
   margin-bottom: 0;
+}
+
+.refreshButton,
+.editorHeader :global(.btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.loadingState {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--secondary-color);
+}
+
+.scheduleStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.groupBadge {
+  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+}
+
+.selectorCard,
+.editorCard {
+  border: 1px solid rgba(52, 58, 64, 0.1);
+  border-radius: 0.85rem;
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.04);
+}
+
+.editorHeader,
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.sectionHeader p {
+  margin: 0.2rem 0 0;
+  color: #7b8797;
+}
+
+.diarySection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.diaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.dayCard {
+  min-width: 0;
+  border: 1px solid rgba(52, 58, 64, 0.1);
+  border-radius: 0.95rem;
+  background:
+    linear-gradient(180deg, rgba(13, 110, 253, 0.035), transparent 120px),
+    #ffffff;
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.04);
+  overflow: hidden;
+}
+
+.dayCardToday {
+  border-color: rgba(25, 135, 84, 0.42);
+  box-shadow:
+    0 12px 28px rgba(17, 24, 39, 0.04),
+    0 0 0 1px rgba(25, 135, 84, 0.16);
+}
+
+.dayHeader {
+  min-height: 92px;
+  padding: 1.1rem 1.2rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dayEyebrow {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #7b8797;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.dayHeader h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.lessonCounter {
+  min-width: 5.8rem;
+  min-height: 2.1rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: #eef5ff;
+  color: #0d6efd;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.dayEmpty {
+  min-height: 156px;
+  padding: 1rem;
+  color: #8a97a8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  text-align: center;
+}
+
+.dayEmpty svg {
+  font-size: 1.55rem;
+}
+
+.lessonList {
+  padding: 1rem 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.lessonItem {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.timeRail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeDot {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: #0d6efd;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.82rem;
+  box-shadow: 0 8px 18px rgba(13, 110, 253, 0.22);
+}
+
+.timeLine {
+  width: 2px;
+  flex: 1;
+  min-height: 2.2rem;
+  margin-top: 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(13, 110, 253, 0.35), transparent);
+}
+
+.lessonCard {
+  min-width: 0;
+  padding: 0.95rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 0.8rem;
+  background: #ffffff;
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: start;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.lessonCard:hover {
+  border-color: rgba(13, 110, 253, 0.28);
+  box-shadow: 0 10px 22px rgba(17, 24, 39, 0.05);
+}
+
+.lessonTime {
+  min-height: 2.15rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.55rem;
+  background: #f5f8fc;
+  color: #1f2937;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.lessonBody {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lessonTitleRow {
+  min-width: 0;
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+}
+
+.lessonIcon {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  border-radius: 0.65rem;
+  background: rgba(13, 110, 253, 0.11);
+  color: #0d6efd;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lessonTitleRow h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.lessonSubtle {
+  display: block;
+  margin-top: 0.15rem;
+  color: #7b8797;
+  font-size: 0.86rem;
+}
+
+.lessonMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.lessonMeta span,
+.lessonMeta a {
+  min-height: 1.85rem;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  background: #f5f8fc;
+  color: #526173;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+
+.lessonMeta a {
+  color: #0d6efd;
+  background: #eef5ff;
+}
+
+.lessonActions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.lessonActions :global(.btn) {
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyDiary {
+  min-height: 160px;
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+  border-radius: 0.9rem;
+  background: #ffffff;
+  color: #7b8797;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: 700;
+}
+
+.backLink {
+  width: fit-content;
+  color: var(--primary-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
 }
 
 .cardGrid {
@@ -41,4 +363,41 @@
 
 .unauthMessage p {
   color: var(--bs-secondary-color, #6c757d);
+}
+
+@media (max-width: 1180px) {
+  .diaryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .header,
+  .editorHeader,
+  .sectionHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .refreshButton,
+  .editorHeader :global(.btn) {
+    width: 100%;
+  }
+
+  .dayHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .lessonCounter {
+    min-width: 0;
+  }
+
+  .lessonCard {
+    grid-template-columns: 1fr;
+  }
+
+  .lessonActions {
+    justify-content: flex-end;
+  }
 }

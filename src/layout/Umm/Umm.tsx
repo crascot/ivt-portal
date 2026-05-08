@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Button, Card, Col, Row, Spinner } from 'react-bootstrap';
+import {
+  FiAlertCircle,
+  FiBookOpen,
+  FiFolder,
+  FiPlus,
+  FiSearch,
+} from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 
-import { ummApi } from '@api/ummApi';
 import { scheduleApi } from '@api/scheduleApi';
+import { ummApi } from '@api/ummApi';
 import { useAuth } from '@context/AuthContext';
 import { RoleEnum } from '@entities/role-enum';
 import {
@@ -105,7 +111,7 @@ export const Umm = () => {
       disciplineId: data.disciplineId,
       authorId: data.authorId,
       materialKind: data.materialKind,
-      section: data.section,
+      section: null,
       urls: data.urls,
       files: data.files,
     };
@@ -130,7 +136,7 @@ export const Umm = () => {
       description: data.description,
       disciplineId: data.disciplineId,
       materialKind: data.materialKind,
-      section: data.section,
+      section: null,
       urls: data.urls.length > 0 ? data.urls : undefined,
       files: data.files.length > 0 ? data.files : undefined,
     });
@@ -154,130 +160,135 @@ export const Umm = () => {
   };
 
   const searchActive = showCatalogSearchPane(filters);
+  const showEditor = showForm || editingMaterial;
 
   return (
     <div className={s.page}>
-      <div className={s.header}>
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <h1 className="mb-1">Учебно-методические материалы</h1>
-            <p className="text-muted mb-0">
-              Выберите дисциплину или найдите материал по ключевым словам по
-              всем курсам
-            </p>
-          </div>
-          <div className="d-flex gap-2">
-            <Button
-              variant="outline-primary"
-              onClick={refreshAll}
-              disabled={isLoading}
-            >
-              Обновить
-            </Button>
-            {canManage && !showForm && !editingMaterial && (
-              <Button onClick={() => setShowForm(true)}>
-                Добавить материал
-              </Button>
-            )}
-          </div>
+      <section className={s.hero}>
+        <div>
+          <h1>Учебно-методические материалы</h1>
+          <p>
+            Каталог материалов по дисциплинам: добавляйте файлы, ссылки и быстро
+            находите нужные ресурсы.
+          </p>
         </div>
-      </div>
 
-      {error && <Alert variant="danger">{error}</Alert>}
-      {actionError && <Alert variant="danger">{actionError}</Alert>}
+        {canManage && !showEditor && (
+          <button
+            type="button"
+            className={s.primaryButton}
+            onClick={() => setShowForm(true)}
+          >
+            <FiPlus size={18} aria-hidden="true" />
+            Новый материал
+          </button>
+        )}
+      </section>
+
+      {(error || actionError) && (
+        <div className={s.errorBox}>
+          <FiAlertCircle size={20} aria-hidden="true" />
+          <span>{error || actionError}</span>
+        </div>
+      )}
 
       <UmmFilters
         value={filters}
         teachers={teachers}
+        isLoading={isLoading}
         onChange={updateFilters}
         onReset={resetFilters}
+        onRefresh={refreshAll}
       />
 
-      {showForm && (
-        <Card>
-          <Card.Body>
-            <Card.Title className="mb-3">Новый материал</Card.Title>
-            <UmmForm
-              disciplines={disciplines}
-              teachers={teachers}
-              teacherId={teacherId}
-              editingMaterial={null}
-              isSubmitting={isSubmitting}
-              showAuthorSelect={showAuthorSelect}
-              onSubmit={handleCreate}
-              onCancel={handleCancel}
-            />
-          </Card.Body>
-        </Card>
-      )}
+      {showEditor && canManage && (
+        <section className={s.formCard}>
+          <div className={s.formCardHeader}>
+            <div>
+              <span>
+                {editingMaterial ? 'Редактирование' : 'Новый материал'}
+              </span>
+              <h2>
+                {editingMaterial
+                  ? 'Обновите учебный материал'
+                  : 'Создайте учебный материал'}
+              </h2>
+            </div>
+          </div>
 
-      {editingMaterial && (
-        <Card>
-          <Card.Body>
-            <Card.Title className="mb-3">Редактирование материала</Card.Title>
-            <UmmForm
-              disciplines={disciplines}
-              teachers={teachers}
-              teacherId={teacherId}
-              editingMaterial={editingMaterial}
-              isSubmitting={isSubmitting}
-              showAuthorSelect={showAuthorSelect}
-              onSubmit={handleUpdate}
-              onCancel={handleCancel}
-            />
-          </Card.Body>
-        </Card>
+          <UmmForm
+            disciplines={disciplines}
+            teachers={teachers}
+            teacherId={teacherId}
+            editingMaterial={editingMaterial}
+            isSubmitting={isSubmitting}
+            showAuthorSelect={showAuthorSelect}
+            onSubmit={editingMaterial ? handleUpdate : handleCreate}
+            onCancel={handleCancel}
+          />
+        </section>
       )}
 
       {!searchActive && (
-        <section>
-          <h2 className="h5 mb-3">Дисциплины</h2>
+        <section className={s.catalogSection}>
+          <div className={s.sectionHeader}>
+            <div>
+              <h2>Дисциплины</h2>
+              <p>Откройте дисциплину, чтобы посмотреть материалы по курсу.</p>
+            </div>
+            <span>{disciplineStats.length} дисциплин</span>
+          </div>
+
           {disciplineStats.length === 0 ? (
-            <Alert variant="light" className="mb-0">
-              Пока нет загруженных материалов. После публикации преподавателями
-              здесь появятся карточки дисциплин.
-            </Alert>
+            <div className={s.emptyState}>
+              <FiFolder size={32} aria-hidden="true" />
+              <strong>Материалы пока не опубликованы</strong>
+              <span>
+                После публикации преподавателями здесь появятся карточки
+                дисциплин.
+              </span>
+            </div>
           ) : (
-            <Row className="g-3">
+            <div className={s.disciplineGrid}>
               {disciplineStats.map((row) => (
-                <Col key={row.disciplineId} md={6} lg={4}>
-                  <Card
-                    as={Link}
-                    to={ummDisciplinePath(row.disciplineId)}
-                    className={s.disciplineCard}
-                  >
-                    <Card.Body>
-                      <Card.Title className="h6 mb-2">
-                        {row.disciplineName}
-                      </Card.Title>
-                      <p className="text-muted small mb-0">
-                        Материалов: {row.materialCount}
-                      </p>
-                      <span className={s.disciplineCardHint}>
-                        Открыть каталог →
-                      </span>
-                    </Card.Body>
-                  </Card>
-                </Col>
+                <Link
+                  key={row.disciplineId}
+                  to={ummDisciplinePath(row.disciplineId)}
+                  className={s.disciplineCard}
+                >
+                  <div className={s.disciplineIcon}>
+                    <FiBookOpen size={24} aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h3>{row.disciplineName}</h3>
+                    <p>Материалов: {row.materialCount}</p>
+                  </div>
+                  <span className={s.disciplineCardHint}>Открыть</span>
+                </Link>
               ))}
-            </Row>
+            </div>
           )}
         </section>
       )}
 
       {searchActive && (
-        <section className="mt-4">
-          <h2 className="h5 mb-3">Результаты поиска</h2>
-          {isLoading ? (
-            <div className="d-flex align-items-center gap-2">
-              <Spinner animation="border" size="sm" />
-              <span>Загрузка...</span>
+        <section className={s.catalogSection}>
+          <div className={s.sectionHeader}>
+            <div>
+              <h2>Результаты поиска</h2>
+              <p>Материалы, найденные по текущим фильтрам.</p>
             </div>
+            <span>{materials.length} найдено</span>
+          </div>
+
+          {isLoading ? (
+            <div className={s.loadingState}>Загрузка материалов...</div>
           ) : materials.length === 0 ? (
-            <Alert variant="light" className="mb-0">
-              Ничего не найдено — измените запрос или выберите дисциплину в
-              каталоге выше.
-            </Alert>
+            <div className={s.emptyState}>
+              <FiSearch size={32} aria-hidden="true" />
+              <strong>Ничего не найдено</strong>
+              <span>Измените запрос или сбросьте фильтры.</span>
+            </div>
           ) : (
             <div className={s.cardList}>
               {materials.map((material) => (

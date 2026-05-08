@@ -101,7 +101,7 @@ export const UmmDetail = () => {
       description: data.description,
       disciplineId: data.disciplineId,
       materialKind: data.materialKind,
-      section: data.section,
+      section: null,
       urls: data.urls.length > 0 ? data.urls : undefined,
       files: data.files.length > 0 ? data.files : undefined,
     });
@@ -191,11 +191,6 @@ export const UmmDetail = () => {
               <Badge bg="light" text="dark" className={s.metaChip}>
                 {UMM_KIND_LABELS[material.materialKind ?? 'GENERAL']}
               </Badge>
-              {material.section && (
-                <Badge bg="light" text="dark" className={s.metaChip}>
-                  Раздел: {material.section}
-                </Badge>
-              )}
               <Badge bg="light" text="dark" className={s.metaChip}>
                 {material.authorName}
               </Badge>

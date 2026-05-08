@@ -10,9 +10,13 @@ export type TaskDto = {
   description: string;
   disciplineName: string;
   disciplineId: number | null;
+  createdById: number | null;
   teacherName: string;
   createdAt: string | null;
   deadline: string | null;
+  reportsCount: number;
+  pendingReportsCount: number;
+  acceptedReportsCount: number;
   attachments: TaskAttachmentDto[];
 };
 

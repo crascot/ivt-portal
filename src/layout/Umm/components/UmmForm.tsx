@@ -1,5 +1,20 @@
-import { useRef, useState } from 'react';
-import { Button, Col, Form, Row } from 'react-bootstrap';
+import {
+  type ChangeEvent,
+  type DragEvent,
+  type FormEvent,
+  useRef,
+  useState,
+} from 'react';
+import {
+  FiBookOpen,
+  FiCheckCircle,
+  FiFileText,
+  FiLink,
+  FiPaperclip,
+  FiSave,
+  FiUploadCloud,
+  FiX,
+} from 'react-icons/fi';
 
 import { DisciplineShort, TeacherShort } from '@entities/scheduleRequest';
 import {
@@ -8,6 +23,8 @@ import {
   UmmMaterialKind,
   UmmMaterialShortDto,
 } from '@entities/ummRequest';
+
+import s from '../Umm.module.css';
 
 type EditingMaterial = UmmMaterialDto | UmmMaterialShortDto;
 
@@ -35,11 +52,44 @@ type Props = {
   onCancel: () => void;
 };
 
+type FieldErrors = Partial<
+  Record<
+    | 'title'
+    | 'description'
+    | 'disciplineId'
+    | 'authorId'
+    | 'materialKind'
+    | 'urls',
+    string
+  >
+>;
+
 const kindFromEditing = (m: EditingMaterial | null): UmmMaterialKind => {
   if (!m || !('materialKind' in m) || !m.materialKind) {
     return 'GENERAL';
   }
   return m.materialKind;
+};
+
+const formatFileSize = (bytes: number) => {
+  if (bytes < 1024) return `${bytes} Б`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} КБ`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+};
+
+const parseUrls = (value: string) =>
+  value
+    .split(/[\n,]+/)
+    .map((url) => url.trim())
+    .filter((url) => url.length > 0);
+
+const isHttpUrl = (value: string) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
 };
 
 export const UmmForm = ({
@@ -63,13 +113,13 @@ export const UmmForm = ({
   const [materialKind, setMaterialKind] = useState<UmmMaterialKind>(
     kindFromEditing(editingMaterial)
   );
-  const [section, setSection] = useState(editingMaterial?.section ?? '');
   const [selectedAuthorId, setSelectedAuthorId] = useState<number | null>(
     editingMaterial?.authorId ?? teacherId
   );
-  const [urlsText, setUrlsText] = useState<string>('');
+  const [urlsText, setUrlsText] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [validated, setValidated] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fixedDisciplineName =
@@ -77,54 +127,119 @@ export const UmmForm = ({
       ? disciplines.find((d) => d.id === fixedDisciplineId)?.name
       : null;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFiles(Array.from(e.target.files));
+  const kindEntries = Object.entries(UMM_KIND_LABELS) as [
+    UmmMaterialKind,
+    string,
+  ][];
+
+  const addFiles = (nextFiles: File[]) => {
+    if (nextFiles.length === 0) return;
+
+    setFiles((prev) => {
+      const existing = new Set(
+        prev.map((file) => `${file.name}-${file.size}-${file.lastModified}`)
+      );
+      const unique = nextFiles.filter(
+        (file) =>
+          !existing.has(`${file.name}-${file.size}-${file.lastModified}`)
+      );
+      return [...prev, ...unique];
+    });
+  };
+
+  const clearError = (field: keyof FieldErrors) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    addFiles(Array.from(event.target.files ?? []));
+  };
+
+  const handleDrop = (event: DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    addFiles(Array.from(event.dataTransfer.files));
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    const form = e.currentTarget;
     const resolvedDisciplineId = fixedDisciplineId ?? disciplineId;
-    const isValid = form.checkValidity() && resolvedDisciplineId != null;
-    if (!isValid) {
-      setValidated(true);
-      return;
-    }
-
     const resolvedAuthorId = selectedAuthorId ?? teacherId;
-    if (!resolvedAuthorId) {
+    const parsedUrls = parseUrls(urlsText);
+    const nextErrors: FieldErrors = {};
+
+    if (!title.trim()) {
+      nextErrors.title = 'Укажите название материала';
+    }
+
+    if (!description.trim()) {
+      nextErrors.description = 'Добавьте описание материала';
+    }
+
+    if (resolvedDisciplineId == null) {
+      nextErrors.disciplineId = 'Выберите предмет';
+    }
+
+    if (!materialKind) {
+      nextErrors.materialKind = 'Выберите тип материала';
+    }
+
+    if (resolvedAuthorId == null) {
+      nextErrors.authorId = showAuthorSelect
+        ? 'Выберите автора материала'
+        : 'Не удалось определить текущего преподавателя';
+    }
+
+    if (parsedUrls.some((url) => !isHttpUrl(url))) {
+      nextErrors.urls = 'Ссылки должны начинаться с http:// или https://';
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
       setValidated(true);
+      setErrors(nextErrors);
       return;
     }
 
-    const parsedUrls = urlsText
-      .split(/[\n,]+/)
-      .map((u) => u.trim())
-      .filter((u) => u.length > 0);
+    setErrors({});
+
+    if (resolvedDisciplineId == null || resolvedAuthorId == null) {
+      return;
+    }
 
     try {
       await onSubmit({
         title: title.trim(),
-        description: description.trim() ? description.trim() : null,
+        description: description.trim(),
         disciplineId: resolvedDisciplineId,
         authorId: resolvedAuthorId,
         materialKind,
-        section: section.trim() ? section.trim() : null,
+        section: null,
         urls: parsedUrls,
         files,
       });
+
       if (!editingMaterial) {
         setTitle('');
         setDescription('');
         setDisciplineId(fixedDisciplineId ?? null);
         setMaterialKind('GENERAL');
-        setSection('');
+        setSelectedAuthorId(teacherId);
         setUrlsText('');
         setFiles([]);
         setValidated(false);
+        setErrors({});
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
@@ -140,186 +255,290 @@ export const UmmForm = ({
     }
   };
 
-  const kindEntries = Object.entries(UMM_KIND_LABELS) as [
-    UmmMaterialKind,
-    string,
-  ][];
-
   return (
-    <Form noValidate validated={validated} onSubmit={handleSubmit}>
-      <Row className="g-3">
-        <Col md={6}>
-          <Form.Group controlId="umm-title">
-            <Form.Label>Название материала</Form.Label>
-            <Form.Control
-              required
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Введите название"
-            />
-            <Form.Control.Feedback type="invalid">
-              Введите название
-            </Form.Control.Feedback>
-          </Form.Group>
-        </Col>
+    <form
+      noValidate
+      className={`${s.ummForm} ${validated ? s.formValidated : ''}`}
+      onSubmit={handleSubmit}
+    >
+      <div className={s.formTopGrid}>
+        <section className={s.formSection}>
+          <div className={s.formSectionHeader}>
+            <span className={s.formStep}>1</span>
+            <div>
+              <h3>Основная информация</h3>
+              <p>Название, дисциплина и краткое описание материала.</p>
+            </div>
+          </div>
 
-        <Col md={6}>
-          {fixedDisciplineId != null && fixedDisciplineName ? (
-            <Form.Group controlId="umm-discipline-fixed">
-              <Form.Label>Предмет</Form.Label>
-              <Form.Control
-                plaintext
-                readOnly
-                className="py-2"
-                value={fixedDisciplineName}
-              />
-            </Form.Group>
-          ) : (
-            <Form.Group controlId="umm-discipline">
-              <Form.Label>Предмет</Form.Label>
-              <Form.Select
+          <div className={s.formFieldsGrid}>
+            <label className={s.fieldGroup}>
+              <span>
+                Название материала <b>*</b>
+              </span>
+              <input
                 required
-                value={disciplineId ?? ''}
-                onChange={(e) =>
-                  setDisciplineId(
-                    e.target.value ? Number(e.target.value) : null
-                  )
-                }
-              >
-                <option value="">Выберите предмет</option>
-                {disciplines.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </Form.Select>
-              <Form.Control.Feedback type="invalid">
-                Выберите предмет
-              </Form.Control.Feedback>
-            </Form.Group>
-          )}
-        </Col>
+                aria-invalid={Boolean(errors.title)}
+                type="text"
+                value={title}
+                onChange={(event) => {
+                  setTitle(event.target.value);
+                  clearError('title');
+                }}
+                placeholder="Например: Конспект лекций по базам данных"
+              />
+              {errors.title && (
+                <strong className={s.fieldError}>{errors.title}</strong>
+              )}
+              <small>Короткое и понятное название материала</small>
+            </label>
 
-        <Col xs={12}>
-          <Form.Group controlId="umm-description">
-            <Form.Label>Описание</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={4}
+            <label className={s.fieldGroup}>
+              <span>
+                Предмет <b>*</b>
+              </span>
+              {fixedDisciplineId != null && fixedDisciplineName ? (
+                <div className={s.readOnlyField}>{fixedDisciplineName}</div>
+              ) : (
+                <select
+                  required
+                  aria-invalid={Boolean(errors.disciplineId)}
+                  value={disciplineId ?? ''}
+                  onChange={(event) => {
+                    setDisciplineId(
+                      event.target.value ? Number(event.target.value) : null
+                    );
+                    clearError('disciplineId');
+                  }}
+                >
+                  <option value="">Выберите предмет</option>
+                  {disciplines.map((discipline) => (
+                    <option key={discipline.id} value={discipline.id}>
+                      {discipline.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {errors.disciplineId && (
+                <strong className={s.fieldError}>{errors.disciplineId}</strong>
+              )}
+              <small>Выберите дисциплину из списка</small>
+            </label>
+          </div>
+
+          <label className={s.fieldGroup}>
+            <span>
+              Описание <b>*</b>
+            </span>
+            <textarea
+              required
+              aria-invalid={Boolean(errors.description)}
+              rows={5}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Краткое описание материала"
+              onChange={(event) => {
+                setDescription(event.target.value);
+                clearError('description');
+              }}
+              placeholder="Опишите содержание, цель и структуру материала"
             />
-          </Form.Group>
-        </Col>
+            {errors.description && (
+              <strong className={s.fieldError}>{errors.description}</strong>
+            )}
+            <small>
+              Это описание поможет студентам быстрее понять контекст
+            </small>
+          </label>
+        </section>
 
-        <Col md={6}>
-          <Form.Group controlId="umm-kind">
-            <Form.Label>Тип материала</Form.Label>
-            <Form.Select
+        <section className={s.formSection}>
+          <div className={s.formSectionHeader}>
+            <span className={s.formStep}>2</span>
+            <div>
+              <h3>Классификация</h3>
+              <p>Оставьте только тип материала и автора публикации.</p>
+            </div>
+          </div>
+
+          <label className={s.fieldGroup}>
+            <span>
+              Тип материала <b>*</b>
+            </span>
+            <select
+              required
+              aria-invalid={Boolean(errors.materialKind)}
               value={materialKind}
-              onChange={(e) =>
-                setMaterialKind(e.target.value as UmmMaterialKind)
-              }
+              onChange={(event) => {
+                setMaterialKind(event.target.value as UmmMaterialKind);
+                clearError('materialKind');
+              }}
             >
-              {kindEntries.map(([k, label]) => (
-                <option key={k} value={k}>
+              {kindEntries.map(([kind, label]) => (
+                <option key={kind} value={kind}>
                   {label}
                 </option>
               ))}
-            </Form.Select>
-            <Form.Text className="text-muted">
-              Общее, УМК, лекции, лабораторные или дополнительные материалы
-            </Form.Text>
-          </Form.Group>
-        </Col>
+            </select>
+            {errors.materialKind && (
+              <strong className={s.fieldError}>{errors.materialKind}</strong>
+            )}
+            <small>Общее, УМК, лекции, лабораторные или дополнительные</small>
+          </label>
 
-        <Col md={6}>
-          <Form.Group controlId="umm-section">
-            <Form.Label>Раздел курса</Form.Label>
-            <Form.Control
-              type="text"
-              value={section}
-              onChange={(e) => setSection(e.target.value)}
-              placeholder="Необязательно: тема модуля для фильтра на странице дисциплины"
-            />
-          </Form.Group>
-        </Col>
-
-        {showAuthorSelect && (
-          <Col md={6}>
-            <Form.Group controlId="umm-author">
-              <Form.Label>Автор</Form.Label>
-              <Form.Select
+          {showAuthorSelect && (
+            <label className={s.fieldGroup}>
+              <span>
+                Автор <b>*</b>
+              </span>
+              <select
                 required
+                aria-invalid={Boolean(errors.authorId)}
                 value={selectedAuthorId ?? ''}
-                onChange={(e) =>
+                onChange={(event) => {
                   setSelectedAuthorId(
-                    e.target.value ? Number(e.target.value) : null
-                  )
-                }
+                    event.target.value ? Number(event.target.value) : null
+                  );
+                  clearError('authorId');
+                }}
               >
                 <option value="">Выберите преподавателя</option>
-                {teachers.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.fullName}
+                {teachers.map((teacher) => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {teacher.fullName}
                   </option>
                 ))}
-              </Form.Select>
-              <Form.Control.Feedback type="invalid">
-                Выберите автора
-              </Form.Control.Feedback>
-            </Form.Group>
-          </Col>
-        )}
+              </select>
+              {errors.authorId && (
+                <strong className={s.fieldError}>{errors.authorId}</strong>
+              )}
+              <small>Администратор может выбрать автора материала</small>
+            </label>
+          )}
 
-        <Col md={showAuthorSelect ? 6 : 12}>
-          <Form.Group controlId="umm-urls">
-            <Form.Label>Ссылки</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
+          {!showAuthorSelect && (
+            <div className={s.formNote}>
+              <FiBookOpen size={20} aria-hidden="true" />
+              <span>
+                Материал будет опубликован от имени текущего преподавателя.
+              </span>
+            </div>
+          )}
+          {!showAuthorSelect && errors.authorId && (
+            <strong className={s.fieldError}>{errors.authorId}</strong>
+          )}
+        </section>
+      </div>
+
+      <div className={s.formBottomGrid}>
+        <section className={s.formSection}>
+          <div className={s.formSectionHeader}>
+            <FiLink size={22} aria-hidden="true" />
+            <div>
+              <h3>Ссылки</h3>
+              <p>Добавьте полезные внешние ресурсы, если они есть.</p>
+            </div>
+          </div>
+
+          <label className={s.fieldGroup}>
+            <span>Ресурсы</span>
+            <textarea
+              rows={6}
               value={urlsText}
-              onChange={(e) => setUrlsText(e.target.value)}
-              placeholder="По одной ссылке на строку"
+              aria-invalid={Boolean(errors.urls)}
+              onChange={(event) => {
+                setUrlsText(event.target.value);
+                clearError('urls');
+              }}
+              placeholder="https://example.com/material&#10;https://example.com/docs"
             />
-            <Form.Text className="text-muted">
-              Разделяйте ссылки переносом строки или запятой
-            </Form.Text>
-          </Form.Group>
-        </Col>
+            {errors.urls && (
+              <strong className={s.fieldError}>{errors.urls}</strong>
+            )}
+            <small>Каждая ссылка с новой строки или через запятую</small>
+          </label>
+        </section>
 
-        <Col xs={12}>
-          <Form.Group controlId="umm-files">
-            <Form.Label>Прикрепить файлы</Form.Label>
-            <Form.Control
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={handleFileChange}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
+        <section className={s.formSection}>
+          <div className={s.formSectionHeader}>
+            <FiPaperclip size={22} aria-hidden="true" />
+            <div>
+              <h3>Файлы</h3>
+              <p>Прикрепите документы, презентации или архивы.</p>
+            </div>
+          </div>
 
-      <div className="d-flex gap-2 mt-3">
-        <Button type="submit" disabled={isSubmitting}>
+          <input
+            ref={fileInputRef}
+            id="umm-files"
+            className={s.fileInput}
+            type="file"
+            multiple
+            onChange={handleFileChange}
+          />
+          <label
+            htmlFor="umm-files"
+            className={s.fileDropzone}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={handleDrop}
+          >
+            <FiUploadCloud size={34} aria-hidden="true" />
+            <strong>
+              Перетащите файлы сюда или <span>нажмите для выбора</span>
+            </strong>
+            <small>PDF, DOCX, PPTX, XLSX, ZIP и другие учебные файлы</small>
+          </label>
+
+          {files.length > 0 && (
+            <div className={s.fileList}>
+              {files.map((file, index) => (
+                <div
+                  className={s.fileItem}
+                  key={`${file.name}-${file.size}-${file.lastModified}`}
+                >
+                  <FiFileText size={20} aria-hidden="true" />
+                  <span>{file.name}</span>
+                  <small>{formatFileSize(file.size)}</small>
+                  <FiCheckCircle
+                    className={s.fileOk}
+                    size={18}
+                    aria-hidden="true"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeFile(index)}
+                    aria-label={`Убрать файл ${file.name}`}
+                  >
+                    <FiX size={18} aria-hidden="true" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+
+      <div className={s.formActions}>
+        <button
+          type="submit"
+          className={s.primaryButton}
+          disabled={isSubmitting}
+        >
+          <FiSave size={18} aria-hidden="true" />
           {isSubmitting
             ? 'Сохранение...'
             : editingMaterial
               ? 'Сохранить изменения'
               : 'Создать материал'}
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          variant="outline-secondary"
+          className={s.secondaryButton}
           onClick={onCancel}
           disabled={isSubmitting}
         >
+          <FiX size={18} aria-hidden="true" />
           Отмена
-        </Button>
+        </button>
       </div>
-    </Form>
+    </form>
   );
 };

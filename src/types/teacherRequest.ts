@@ -30,6 +30,61 @@ export type TeacherDisciplineDto = {
   ummfiles: UmmFileDto[];
 };
 
+export type TeacherDirectoryItemDto = {
+  id: number;
+  fullName: string;
+  email: string;
+  position: string;
+  disciplinesCount: number;
+  materialsCount: number;
+};
+
+export type TeacherDirectoryDisciplineDto = {
+  id: number;
+  name: string;
+  description: string | null;
+};
+
+export type TeacherDirectoryScheduleDto = {
+  id: number;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  room: string | null;
+  url: string | null;
+  disciplineName: string;
+  groupName: string;
+};
+
+export type TeacherDirectoryMaterialDto = {
+  id: number;
+  title: string;
+  description: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  disciplineId: number;
+  disciplineName: string;
+  authorId: number;
+  authorName: string;
+  materialKind: string;
+  section: string | null;
+  attachmentsCount: number;
+  urlsCount: number;
+};
+
+export type TeacherDetailDto = {
+  id: number;
+  fullName: string;
+  email: string;
+  position: string;
+  enabled: boolean;
+  disciplinesCount: number;
+  materialsCount: number;
+  disciplines: TeacherDirectoryDisciplineDto[];
+  schedules: TeacherDirectoryScheduleDto[];
+  recentMaterials: TeacherDirectoryMaterialDto[];
+};
+
 export type ReportDto = {
   id: number;
   comment: string | null;

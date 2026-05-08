@@ -1,4 +1,5 @@
 import { Alert, Button, Spinner } from 'react-bootstrap';
+import { FiRefreshCw } from 'react-icons/fi';
 
 import { RoleEnum } from '@entities/role-enum';
 import { useSchedule } from '@hooks/schedule/useSchedule';
@@ -52,23 +53,25 @@ export const Schedule = () => {
   return (
     <div className={s.schedule}>
       <div className={s.header}>
-        <div className="d-flex justify-content-between align-items-center">
+        <div>
           <h1>{title}</h1>
-          <Button
-            variant="outline-primary"
-            onClick={reload}
-            disabled={isLoading}
-          >
-            Обновить
-          </Button>
+          <p>{subtitle}</p>
         </div>
-        <p>{subtitle}</p>
+        <Button
+          variant="outline-primary"
+          onClick={reload}
+          disabled={isLoading}
+          className={s.refreshButton}
+        >
+          <FiRefreshCw />
+          Обновить
+        </Button>
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
 
       {isLoading ? (
-        <div className="d-flex align-items-center gap-2">
+        <div className={s.loadingState}>
           <Spinner animation="border" size="sm" />
           <span>Загрузка расписания...</span>
         </div>

@@ -52,7 +52,7 @@ export const DeadlineToasts = () => {
 
   const goToTask = (announcementId: number, taskId: number) => {
     void markAsSeen(announcementId);
-    navigate(`${ROUTES.TASKS}?taskId=${taskId}`);
+    navigate(ROUTES.TASK_DETAIL.replace(':taskId', String(taskId)));
   };
 
   return (

@@ -1,4 +1,13 @@
-import { Badge, Button, Card } from 'react-bootstrap';
+import {
+  FiBookOpen,
+  FiCalendar,
+  FiEdit2,
+  FiExternalLink,
+  FiFileText,
+  FiLink,
+  FiTrash2,
+  FiUser,
+} from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -30,96 +39,97 @@ const formatDate = (iso: string | null): string => {
 const buildDetailPath = (id: number) =>
   ROUTES.UMM_DETAIL.replace(':id', String(id));
 
-const kindLabel = (k: UmmMaterialKind | undefined): string => {
-  if (!k) return UMM_KIND_LABELS.GENERAL;
-  return UMM_KIND_LABELS[k] ?? k;
+const kindLabel = (kind: UmmMaterialKind | undefined): string => {
+  if (!kind) return UMM_KIND_LABELS.GENERAL;
+  return UMM_KIND_LABELS[kind] ?? kind;
 };
 
 export const UmmCard = ({ material, canManage, onEdit, onDelete }: Props) => {
   const navigate = useNavigate();
-
-  const openDetails = () => navigate(buildDetailPath(material.id));
-
   const kind = material.materialKind ?? 'GENERAL';
 
+  const openDetails = () => {
+    navigate(buildDetailPath(material.id));
+  };
+
   return (
-    <Card as="button" type="button" onClick={openDetails} className={s.ummCard}>
-      <Card.Body>
-        <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
-          <div className="flex-grow-1 text-start">
-            <Card.Title className="mb-1">{material.title}</Card.Title>
-            <div className="text-muted small mb-2">
-              <span>{material.disciplineName}</span>
-              <span className="mx-1">·</span>
-              <span>{material.authorName}</span>
-            </div>
-            {material.description && (
-              <Card.Text className={`mb-2 ${s.cardDescription}`}>
-                {material.description}
-              </Card.Text>
-            )}
-            <div className="d-flex gap-2 flex-wrap align-items-center">
-              <Badge bg="light" text="dark" className={s.metaChip}>
-                {kindLabel(kind)}
-              </Badge>
-              {material.section && (
-                <Badge bg="light" text="dark" className={s.metaChip}>
-                  {material.section}
-                </Badge>
-              )}
-              {material.attachmentsCount > 0 && (
-                <Badge bg="light" text="dark" className={s.metaChip}>
-                  Файлов: {material.attachmentsCount}
-                </Badge>
-              )}
-              {material.urlsCount > 0 && (
-                <Badge bg="light" text="dark" className={s.metaChip}>
-                  Ссылок: {material.urlsCount}
-                </Badge>
-              )}
-              <Badge bg="light" text="dark" className={s.metaChip}>
-                {formatDate(material.createdAt)}
-              </Badge>
-            </div>
+    <article className={s.ummCard}>
+      <button type="button" className={s.cardMain} onClick={openDetails}>
+        <div className={s.cardIcon}>
+          <FiBookOpen size={24} aria-hidden="true" />
+        </div>
+
+        <div className={s.cardContent}>
+          <div className={s.cardTitleRow}>
+            <h3>{material.title}</h3>
+            <FiExternalLink size={18} aria-hidden="true" />
           </div>
 
-          {canManage && (
-            <div
-              className="d-flex flex-column gap-1 flex-shrink-0"
-              onClick={(e) => e.stopPropagation()}
+          <div className={s.cardMetaLine}>
+            <span>
+              <FiFileText size={15} aria-hidden="true" />
+              {material.disciplineName}
+            </span>
+            <span>
+              <FiUser size={15} aria-hidden="true" />
+              {material.authorName}
+            </span>
+          </div>
+
+          {material.description && (
+            <p className={s.cardDescription}>{material.description}</p>
+          )}
+
+          <div className={s.cardChips}>
+            <span className={s.metaChip}>{kindLabel(kind)}</span>
+            {material.attachmentsCount > 0 && (
+              <span className={s.metaChip}>
+                <FiFileText size={14} aria-hidden="true" />
+                {material.attachmentsCount} файл.
+              </span>
+            )}
+            {material.urlsCount > 0 && (
+              <span className={s.metaChip}>
+                <FiLink size={14} aria-hidden="true" />
+                {material.urlsCount} ссыл.
+              </span>
+            )}
+            <span className={s.metaChip}>
+              <FiCalendar size={14} aria-hidden="true" />
+              {formatDate(material.createdAt)}
+            </span>
+          </div>
+        </div>
+      </button>
+
+      {canManage && (
+        <div className={s.cardActions}>
+          {onEdit && (
+            <button
+              type="button"
+              className={s.iconButton}
+              onClick={() => onEdit(material)}
+              aria-label={`Редактировать материал ${material.title}`}
             >
-              {onEdit && (
-                <Button
-                  size="sm"
-                  variant="outline-secondary"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(material);
-                  }}
-                >
-                  Редактировать
-                </Button>
-              )}
-              {onDelete && (
-                <Button
-                  size="sm"
-                  variant="outline-danger"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (
-                      window.confirm(`Удалить материал "${material.title}"?`)
-                    ) {
-                      onDelete(material.id);
-                    }
-                  }}
-                >
-                  Удалить
-                </Button>
-              )}
-            </div>
+              <FiEdit2 size={18} aria-hidden="true" />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              className={`${s.iconButton} ${s.dangerIconButton}`}
+              onClick={() => {
+                if (window.confirm(`Удалить материал "${material.title}"?`)) {
+                  onDelete(material.id);
+                }
+              }}
+              aria-label={`Удалить материал ${material.title}`}
+            >
+              <FiTrash2 size={18} aria-hidden="true" />
+            </button>
           )}
         </div>
-      </Card.Body>
-    </Card>
+      )}
+    </article>
   );
 };

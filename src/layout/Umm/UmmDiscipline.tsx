@@ -51,7 +51,6 @@ export const UmmDiscipline = () => {
 
   const {
     materials,
-    sections,
     filters,
     isLoading,
     error,
@@ -59,7 +58,6 @@ export const UmmDiscipline = () => {
     resetFilters,
     reload,
     setMaterialKind,
-    refreshSections,
   } = useUmmDiscipline(disciplineId);
 
   const [disciplines, setDisciplines] = useState<DisciplineShort[]>([]);
@@ -116,7 +114,7 @@ export const UmmDiscipline = () => {
       disciplineId: data.disciplineId,
       authorId: data.authorId,
       materialKind: data.materialKind,
-      section: data.section,
+      section: null,
       urls: data.urls,
       files: data.files,
     };
@@ -126,7 +124,6 @@ export const UmmDiscipline = () => {
       await ummApi.create(payload);
       setShowForm(false);
       reload();
-      refreshSections();
     } catch {
       setActionError('Не удалось создать материал');
     } finally {
@@ -150,7 +147,7 @@ export const UmmDiscipline = () => {
       description: data.description,
       disciplineId: data.disciplineId,
       materialKind: data.materialKind,
-      section: data.section,
+      section: null,
       urls: data.urls.length > 0 ? data.urls : undefined,
       files: data.files.length > 0 ? data.files : undefined,
     };
@@ -160,7 +157,6 @@ export const UmmDiscipline = () => {
       await ummApi.update(editingMaterial.id, payload);
       setEditingMaterial(null);
       reload();
-      refreshSections();
     } catch {
       setActionError('Не удалось обновить материал');
     } finally {
@@ -173,21 +169,10 @@ export const UmmDiscipline = () => {
     try {
       await ummApi.delete(id);
       reload();
-      refreshSections();
     } catch {
       setActionError('Не удалось удалить материал');
     }
   };
-
-  const sectionOptions = useMemo(() => {
-    const fromApi = new Set(sections);
-    for (const m of materials) {
-      if (m.section?.trim()) {
-        fromApi.add(m.section.trim());
-      }
-    }
-    return [...fromApi].sort((a, b) => a.localeCompare(b, 'ru'));
-  }, [sections, materials]);
 
   if (disciplineId == null || Number.isNaN(disciplineId)) {
     return <Alert variant="danger">Некорректная дисциплина</Alert>;
@@ -223,7 +208,7 @@ export const UmmDiscipline = () => {
           <h1 className="mb-1">{disciplineName}</h1>
           <p className="text-muted mb-0">
             Учебно-методические материалы по дисциплине. Отфильтруйте по типу и
-            разделу или воспользуйтесь поиском.
+            воспользуйтесь поиском.
           </p>
         </div>
       </div>
@@ -231,7 +216,7 @@ export const UmmDiscipline = () => {
       {error && <Alert variant="danger">{error}</Alert>}
       {actionError && <Alert variant="danger">{actionError}</Alert>}
 
-      <div className={s.filters}>
+      <div className={`${s.filters} ${s.disciplineFilters}`}>
         <div className="mb-3">
           <span className="small fw-semibold text-muted d-block mb-2">
             Тип материала
@@ -254,29 +239,7 @@ export const UmmDiscipline = () => {
         </div>
 
         <Row className="g-3 align-items-end">
-          <Col md={4}>
-            <Form.Group controlId="umm-d-section">
-              <Form.Label className="mb-1 small fw-semibold">
-                Раздел курса
-              </Form.Label>
-              <Form.Select
-                value={filters.section ?? ''}
-                onChange={(e) =>
-                  updateFilters({
-                    section: e.target.value ? e.target.value : null,
-                  })
-                }
-              >
-                <option value="">Все разделы</option>
-                {sectionOptions.map((sec) => (
-                  <option key={sec} value={sec}>
-                    {sec}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-          <Col md={7}>
+          <Col md={11}>
             <Form.Group controlId="umm-d-search">
               <Form.Label className="mb-1 small fw-semibold">
                 Поиск в дисциплине
@@ -285,7 +248,7 @@ export const UmmDiscipline = () => {
                 type="search"
                 value={filters.search}
                 onChange={(e) => updateFilters({ search: e.target.value })}
-                placeholder="Название, описание, раздел, имя файла…"
+                placeholder="Название, описание, имя файла…"
               />
             </Form.Group>
           </Col>

@@ -1,11 +1,19 @@
-import { Alert, Button, Form, Spinner } from 'react-bootstrap';
+import { useCallback } from 'react';
+import { Alert, Button, Spinner } from 'react-bootstrap';
+import { FiCheckCircle, FiClock, FiRefreshCw } from 'react-icons/fi';
 
 import { RoleEnum } from '@entities/role-enum';
+import {
+  STUDENT_TASK_STATUS_LABELS,
+  StudentTaskStatus,
+  TaskDto,
+} from '@entities/taskRequest';
+import { ReportDto } from '@entities/teacherRequest';
 import { useTasks } from '@hooks/tasks/useTasks';
+import { computeTaskStatus } from '@utils/taskStatus';
 
-import { StudentTasks } from './components/StudentTasks';
-import { TeacherTasks } from './components/TeacherTasks';
-import { AdminTasks } from './components/AdminTasks';
+import { TaskBoard } from './components/TaskBoard';
+import { formatTaskDate, ManagerTaskStatus } from './taskUi';
 
 import s from './Tasks.module.css';
 
@@ -13,14 +21,68 @@ const ROLE_TITLES: Record<RoleEnum, string> = {
   [RoleEnum.STUDENT]: 'Мои задания',
   [RoleEnum.TEACHER]: 'Управление заданиями',
   [RoleEnum.GROUP_LEADER]: 'Мои задания',
-  [RoleEnum.ADMIN]: 'Мониторинг заданий',
+  [RoleEnum.ADMIN]: 'Управление заданиями',
 };
 
 const ROLE_SUBTITLES: Record<RoleEnum, string> = {
-  [RoleEnum.STUDENT]: 'Просмотр заданий по вашим дисциплинам',
-  [RoleEnum.TEACHER]: 'Создание и редактирование заданий для студентов',
-  [RoleEnum.GROUP_LEADER]: 'Просмотр и выполнение заданий по вашим дисциплинам',
-  [RoleEnum.ADMIN]: 'Просмотр и управление всеми заданиями',
+  [RoleEnum.STUDENT]: 'Просмотр заданий и отправка выполненных работ',
+  [RoleEnum.TEACHER]:
+    'Создание, редактирование и контроль заданий для студентов',
+  [RoleEnum.GROUP_LEADER]: 'Просмотр заданий и отправка выполненных работ',
+  [RoleEnum.ADMIN]:
+    'Создание заданий от имени преподавателей и контроль ответов',
+};
+
+const getLatestReport = (reports: ReportDto[]): ReportDto | null => {
+  if (reports.length === 0) return null;
+
+  return reports.reduce((latest, current) => {
+    const currentTime = new Date(current.submittedAt).getTime();
+    const latestTime = new Date(latest.submittedAt).getTime();
+    return currentTime > latestTime ? current : latest;
+  });
+};
+
+const getStudentBoardStatus = (
+  task: TaskDto,
+  reports: ReportDto[]
+): ManagerTaskStatus => {
+  const info = computeTaskStatus(task, reports);
+
+  if (
+    info.isOverdue &&
+    info.status !== StudentTaskStatus.Accepted &&
+    info.status !== StudentTaskStatus.AcceptedLate
+  ) {
+    return 'OVERDUE';
+  }
+
+  if (
+    info.status === StudentTaskStatus.Accepted ||
+    info.status === StudentTaskStatus.AcceptedLate
+  ) {
+    return 'COMPLETED';
+  }
+
+  if (info.status === StudentTaskStatus.UnderReview) {
+    return 'REVIEW';
+  }
+
+  return 'ACTIVE';
+};
+
+const getStudentStatusLabel = (task: TaskDto, reports: ReportDto[]) => {
+  const info = computeTaskStatus(task, reports);
+
+  if (
+    info.isOverdue &&
+    info.status !== StudentTaskStatus.Accepted &&
+    info.status !== StudentTaskStatus.AcceptedLate
+  ) {
+    return 'Просрочено';
+  }
+
+  return STUDENT_TASK_STATUS_LABELS[info.status];
 };
 
 export const Tasks = () => {
@@ -30,7 +92,6 @@ export const Tasks = () => {
     disciplines,
     teachers,
     teacherId,
-    studentId,
     reportsByTaskId,
     selectedDisciplineId,
     isLoading,
@@ -41,122 +102,132 @@ export const Tasks = () => {
     isStudentView,
     selectDiscipline,
     reloadTasks,
-    reloadStudentTasks,
     addTask,
     updateTask,
     deleteTask,
-    deleteAttachment,
-    downloadAttachment,
   } = useTasks();
 
-  const title = ROLE_TITLES[role!] ?? 'Задания';
-  const subtitle = ROLE_SUBTITLES[role!] ?? '';
+  const title = role ? ROLE_TITLES[role] : 'Задания';
+  const subtitle = role ? ROLE_SUBTITLES[role] : '';
 
-  const showRefreshButton = isStudentView || selectedDisciplineId !== null;
+  const getStudentStatus = useCallback(
+    (task: TaskDto) =>
+      getStudentBoardStatus(task, reportsByTaskId[task.id] ?? []),
+    [reportsByTaskId]
+  );
+
+  const getStudentRowStatusLabel = useCallback(
+    (task: TaskDto) =>
+      getStudentStatusLabel(task, reportsByTaskId[task.id] ?? []),
+    [reportsByTaskId]
+  );
+
+  const renderStudentInfoCell = useCallback(
+    (task: TaskDto) => {
+      const reports = reportsByTaskId[task.id] ?? [];
+      const latestReport = getLatestReport(reports);
+
+      if (!latestReport) {
+        return (
+          <div className={s.taskAnswersCell}>
+            <strong>0</strong>
+            <span>Ответ не отправлен</span>
+            <span>Откройте задание для сдачи</span>
+          </div>
+        );
+      }
+
+      return (
+        <div className={s.taskAnswersCell}>
+          <strong>{reports.length}</strong>
+          <span>
+            <FiClock /> Последний: {formatTaskDate(latestReport.submittedAt)}
+          </span>
+          <span>
+            <FiCheckCircle />{' '}
+            {latestReport.grade != null
+              ? `Оценка: ${latestReport.grade}`
+              : getStudentStatusLabel(task, reports)}
+          </span>
+        </div>
+      );
+    },
+    [reportsByTaskId]
+  );
 
   return (
     <div className={s.tasks}>
-      <div className={s.header}>
-        <div className="d-flex justify-content-between align-items-center">
+      <header className={s.header}>
+        <div>
           <h1>{title}</h1>
-          {showRefreshButton && (
-            <Button
-              variant="outline-primary"
-              onClick={reloadTasks}
-              disabled={isTasksLoading}
-            >
-              Обновить
-            </Button>
-          )}
+          <p>{subtitle}</p>
         </div>
-        <p>{subtitle}</p>
-      </div>
+        <Button
+          type="button"
+          variant="outline-primary"
+          onClick={reloadTasks}
+          disabled={isTasksLoading}
+          className={s.refreshButton}
+        >
+          <FiRefreshCw />
+          Обновить
+        </Button>
+      </header>
 
       {error && <Alert variant="danger">{error}</Alert>}
       {actionError && <Alert variant="danger">{actionError}</Alert>}
+
       {isLoading ? (
-        <div className="d-flex align-items-center gap-2">
+        <div className={s.loadingState}>
           <Spinner animation="border" size="sm" />
           <span>Загрузка...</span>
         </div>
-      ) : isStudentView ? (
-        isTasksLoading ? (
-          <div className="d-flex align-items-center gap-2">
-            <Spinner animation="border" size="sm" />
-            <span>Загрузка заданий...</span>
-          </div>
-        ) : (
-          <StudentTasks
-            tasks={tasks}
-            reportsByTaskId={reportsByTaskId}
-            disciplines={disciplines}
-            studentId={studentId}
-            onDownloadAttachment={downloadAttachment}
-            onReportsMutated={reloadStudentTasks}
-          />
-        )
       ) : (
-        <>
-          <Form.Group controlId="discipline-select" style={{ maxWidth: 400 }}>
-            <Form.Label>Выберите дисциплину</Form.Label>
-            <Form.Select
-              value={selectedDisciplineId ?? ''}
-              onChange={(e) =>
-                selectDiscipline(e.target.value ? Number(e.target.value) : null)
-              }
-            >
-              <option value="">— Дисциплина —</option>
-              {disciplines.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-
-          {selectedDisciplineId !== null && (
-            <>
-              {isTasksLoading ? (
-                <div className="d-flex align-items-center gap-2">
-                  <Spinner animation="border" size="sm" />
-                  <span>Загрузка заданий...</span>
-                </div>
-              ) : (
-                <>
-                  {role === RoleEnum.TEACHER && (
-                    <TeacherTasks
-                      tasks={tasks}
-                      disciplines={disciplines}
-                      teachers={teachers}
-                      teacherId={teacherId}
-                      isSubmitting={isSubmitting}
-                      showTeacherSelect={false}
-                      onAdd={addTask}
-                      onUpdate={updateTask}
-                      onDelete={deleteTask}
-                      onDownloadAttachment={downloadAttachment}
-                      onDeleteAttachment={deleteAttachment}
-                    />
-                  )}
-
-                  {role === RoleEnum.ADMIN && (
-                    <AdminTasks
-                      tasks={tasks}
-                      disciplines={disciplines}
-                      teachers={teachers}
-                      isSubmitting={isSubmitting}
-                      onAdd={addTask}
-                      onUpdate={updateTask}
-                      onDelete={deleteTask}
-                      onDownloadAttachment={downloadAttachment}
-                      onDeleteAttachment={deleteAttachment}
-                    />
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </>
+        <TaskBoard
+          tasks={tasks}
+          disciplines={disciplines}
+          teachers={teachers}
+          selectedDisciplineId={selectedDisciplineId}
+          isLoading={isTasksLoading}
+          isSubmitting={isSubmitting}
+          emptyText={
+            isStudentView
+              ? 'Заданий по вашим дисциплинам пока нет'
+              : 'Заданий по выбранным условиям пока нет'
+          }
+          toolbarTitle="Список заданий"
+          toolbarSubtitle={
+            isStudentView
+              ? 'Откройте задание, чтобы посмотреть материалы и отправить ответ'
+              : 'Показаны задания по выбранным фильтрам'
+          }
+          canCreate={role === RoleEnum.TEACHER || role === RoleEnum.ADMIN}
+          canEdit={role === RoleEnum.TEACHER || role === RoleEnum.ADMIN}
+          teacherId={teacherId}
+          showTeacherSelect={role === RoleEnum.ADMIN}
+          infoColumnTitle={isStudentView ? 'Мой ответ' : 'Ответы'}
+          getTaskStatus={isStudentView ? getStudentStatus : undefined}
+          getTaskStatusLabel={
+            isStudentView ? getStudentRowStatusLabel : undefined
+          }
+          renderInfoCell={isStudentView ? renderStudentInfoCell : undefined}
+          onSelectDiscipline={selectDiscipline}
+          onAdd={
+            role === RoleEnum.TEACHER || role === RoleEnum.ADMIN
+              ? addTask
+              : undefined
+          }
+          onUpdate={
+            role === RoleEnum.TEACHER || role === RoleEnum.ADMIN
+              ? updateTask
+              : undefined
+          }
+          onDelete={
+            role === RoleEnum.TEACHER || role === RoleEnum.ADMIN
+              ? deleteTask
+              : undefined
+          }
+        />
       )}
     </div>
   );

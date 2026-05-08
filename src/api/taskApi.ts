@@ -16,8 +16,18 @@ export const taskApi = {
     return data;
   },
 
+  async getCurrentUserTasks(): Promise<TaskDto[]> {
+    const { data } = await api.get<TaskDto[]>('/task/current');
+    return data;
+  },
+
   async getTasksByDiscipline(disciplineId: number): Promise<TaskDto[]> {
     const { data } = await api.get<TaskDto[]>(`/task/${disciplineId}`);
+    return data;
+  },
+
+  async getTaskById(taskId: number): Promise<TaskDto> {
+    const { data } = await api.get<TaskDto>(`/task/detail/${taskId}`);
     return data;
   },
 

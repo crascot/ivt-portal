@@ -4,6 +4,8 @@ import { GroupShort, ScheduleDto } from '@entities/scheduleRequest';
 
 import { ScheduleTable } from './ScheduleTable';
 
+import s from '../Schedule.module.css';
+
 type Props = {
   groups: GroupShort[];
   selectedGroupId: number | null;
@@ -18,8 +20,8 @@ export const AdminSchedule = ({
   onSelectGroup,
 }: Props) => {
   return (
-    <div className="d-flex flex-column gap-4">
-      <Card>
+    <div className={s.scheduleStack}>
+      <Card className={s.selectorCard}>
         <Card.Body>
           <Card.Title className="mb-3">Выберите группу</Card.Title>
           <Form.Select
@@ -40,7 +42,15 @@ export const AdminSchedule = ({
       </Card>
 
       {selectedGroupId ? (
-        <ScheduleTable schedule={schedule} />
+        <section className={s.diarySection}>
+          <div className={s.sectionHeader}>
+            <div>
+              <h2>Расписание выбранной группы</h2>
+              <p>По дням недели, количеству занятий и времени проведения.</p>
+            </div>
+          </div>
+          <ScheduleTable schedule={schedule} />
+        </section>
       ) : (
         <Alert variant="info">Выберите группу для просмотра расписания</Alert>
       )}

@@ -50,14 +50,12 @@ export const TaskForm = ({
     editingTask?.description ?? ''
   );
   const [disciplineId, setDisciplineId] = useState<number | null>(
-    editingTask
-      ? (disciplines.find((d) => d.name === editingTask.disciplineName)?.id ??
-          null)
-      : null
+    editingTask ? editingTask.disciplineId : null
   );
   const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(
     editingTask
-      ? (teachers.find((t) => t.fullName === editingTask.teacherName)?.id ??
+      ? (editingTask.createdById ??
+          teachers.find((t) => t.fullName === editingTask.teacherName)?.id ??
           null)
       : teacherId
   );
@@ -188,6 +186,7 @@ export const TaskForm = ({
               <Form.Label>Преподаватель</Form.Label>
               <Form.Select
                 required
+                disabled={Boolean(editingTask)}
                 value={selectedTeacherId ?? ''}
                 onChange={(e) =>
                   setSelectedTeacherId(
@@ -205,6 +204,11 @@ export const TaskForm = ({
               <Form.Control.Feedback type="invalid">
                 Выберите преподавателя
               </Form.Control.Feedback>
+              {editingTask && (
+                <Form.Text className="text-muted">
+                  Автор задания задается при создании
+                </Form.Text>
+              )}
             </Form.Group>
           </Col>
         )}

@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { taskApi } from '@api/taskApi';
+import { scheduleApi } from '@api/scheduleApi';
+import { studentApi } from '@api/studentApi';
+import { teacherApi } from '@api/teacherApi';
 import { useAuth } from '@context/AuthContext';
 import { RoleEnum } from '@entities/role-enum';
 import { DisciplineShort, TeacherShort } from '@entities/scheduleRequest';
 import { TaskAnalyticsDto, TaskDto } from '@entities/taskRequest';
 import { ReportDto } from '@entities/teacherRequest';
-import { taskApi } from '@api/taskApi';
-import { scheduleApi } from '@api/scheduleApi';
-import { studentApi } from '@api/studentApi';
-import { teacherApi } from '@api/teacherApi';
+import { sortTasksByCreatedAt } from '../../layout/Tasks/taskUi';
 
 type TasksState = {
   tasks: TaskDto[];
   disciplines: DisciplineShort[];
   teachers: TeacherShort[];
-  /** Reports grouped by taskId for student/group-leader aggregate view. */
   reportsByTaskId: Record<number, ReportDto[]>;
   analytics: TaskAnalyticsDto | null;
 
@@ -74,107 +74,13 @@ export const useTasks = () => {
     []
   );
 
-  const canEdit =
-    role === RoleEnum.TEACHER ||
-    role === RoleEnum.GROUP_LEADER ||
-    role === RoleEnum.ADMIN;
-
+  const canEdit = role === RoleEnum.TEACHER || role === RoleEnum.ADMIN;
   const isStudentView = isStudentLikeRole(role);
 
-  const loadStudentAggregate = useCallback(
-    async (studentId: number, disciplines: DisciplineShort[]) => {
-      if (disciplines.length === 0) {
-        setPartial({
-          tasks: [],
-          reportsByTaskId: {},
-          isTasksLoading: false,
-        });
-        return;
-      }
-
-      const [taskLists, reports] = await Promise.all([
-        Promise.all(disciplines.map((d) => taskApi.getTasksByDiscipline(d.id))),
-        studentApi.getAllReportsByStudent(studentId),
-      ]);
-
-      const tasks = taskLists.flat();
-      setPartial({
-        tasks,
-        reportsByTaskId: groupReportsByTask(reports),
-        isTasksLoading: false,
-      });
-    },
-    [setPartial]
-  );
-
-  const loadInitialData = useCallback(async () => {
-    setPartial({ isLoading: true, error: null });
-    try {
-      if (role === RoleEnum.TEACHER) {
-        const profile = await scheduleApi.getTeacherProfile();
-        const teacherDisciplines = await teacherApi.getTeacherDisciplines(
-          profile.teacherId
-        );
-        const disciplines: DisciplineShort[] = teacherDisciplines.map((d) => ({
-          id: d.id,
-          name: d.name,
-          description: d.description,
-        }));
-        setPartial({
-          disciplines,
-          teachers: [],
-          teacherId: profile.teacherId,
-          studentId: null,
-          isLoading: false,
-        });
-        return;
-      }
-
-      if (isStudentLikeRole(role)) {
-        const profile = await scheduleApi.getStudentProfile();
-        const studentDisciplines = await studentApi.getDisciplinesByGroup(
-          profile.groupId
-        );
-        const disciplines: DisciplineShort[] = studentDisciplines.map((d) => ({
-          id: d.id,
-          name: d.name,
-          description: d.description,
-        }));
-        setPartial({
-          disciplines,
-          teachers: [],
-          teacherId: null,
-          studentId: profile.studentId,
-          isLoading: false,
-          isTasksLoading: true,
-        });
-        try {
-          await loadStudentAggregate(profile.studentId, disciplines);
-        } catch {
-          setPartial({
-            error: 'Не удалось загрузить задания',
-            isTasksLoading: false,
-          });
-        }
-        return;
-      }
-
-      const [disciplines, teachers] = await Promise.all([
-        scheduleApi.getDisciplines(),
-        scheduleApi.getTeachers(),
-      ]);
-
-      setPartial({
-        disciplines,
-        teachers,
-        teacherId: null,
-        studentId: null,
-        isLoading: false,
-      });
-    } catch {
-      setPartial({ error: 'Не удалось загрузить данные', isLoading: false });
-    }
-  }, [role, setPartial, loadStudentAggregate]);
+  const fetchCurrentTasks = useCallback(async () => {
+    const tasks = await taskApi.getCurrentUserTasks();
+    return sortTasksByCreatedAt(tasks);
+  }, []);
 
   const loadAnalytics = useCallback(async () => {
     if (!role) return;
@@ -187,42 +93,135 @@ export const useTasks = () => {
     }
   }, [role, setPartial]);
 
-  const loadTasks = useCallback(
-    async (disciplineId: number) => {
+  const loadStudentAggregate = useCallback(
+    async (studentId: number) => {
+      const [tasks, reports] = await Promise.all([
+        fetchCurrentTasks(),
+        studentApi.getAllReportsByStudent(studentId),
+      ]);
+
       setPartial({
-        selectedDisciplineId: disciplineId,
-        isTasksLoading: true,
-        error: null,
+        tasks,
+        reportsByTaskId: groupReportsByTask(reports),
+        isTasksLoading: false,
       });
-      try {
-        const tasks = await taskApi.getTasksByDiscipline(disciplineId);
-        setPartial({ tasks, isTasksLoading: false });
-      } catch {
-        setPartial({
-          error: 'Не удалось загрузить задания',
-          isTasksLoading: false,
-        });
-      }
     },
-    [setPartial]
+    [fetchCurrentTasks, setPartial]
   );
+
+  const loadCurrentTasks = useCallback(async () => {
+    setPartial({ isTasksLoading: true, error: null });
+    try {
+      const tasks = await fetchCurrentTasks();
+      setPartial({ tasks, isTasksLoading: false });
+    } catch {
+      setPartial({
+        error: 'Не удалось загрузить задания',
+        isTasksLoading: false,
+      });
+    }
+  }, [fetchCurrentTasks, setPartial]);
+
+  const loadInitialData = useCallback(async () => {
+    setPartial({ isLoading: true, isTasksLoading: true, error: null });
+
+    try {
+      if (role === RoleEnum.TEACHER) {
+        const profile = await scheduleApi.getTeacherProfile();
+        const [teacherDisciplines, tasks] = await Promise.all([
+          teacherApi.getTeacherDisciplines(profile.teacherId),
+          fetchCurrentTasks(),
+        ]);
+        const disciplines: DisciplineShort[] = teacherDisciplines.map((d) => ({
+          id: d.id,
+          name: d.name,
+          description: d.description,
+        }));
+
+        setPartial({
+          disciplines,
+          teachers: [],
+          tasks,
+          reportsByTaskId: {},
+          teacherId: profile.teacherId,
+          studentId: null,
+          isLoading: false,
+          isTasksLoading: false,
+          selectedDisciplineId: null,
+        });
+        return;
+      }
+
+      if (isStudentLikeRole(role)) {
+        const profile = await scheduleApi.getStudentProfile();
+        const [studentDisciplines, tasks, reports] = await Promise.all([
+          studentApi.getDisciplinesByGroup(profile.groupId),
+          fetchCurrentTasks(),
+          studentApi.getAllReportsByStudent(profile.studentId),
+        ]);
+        const disciplines: DisciplineShort[] = studentDisciplines.map((d) => ({
+          id: d.id,
+          name: d.name,
+          description: d.description,
+        }));
+
+        setPartial({
+          disciplines,
+          teachers: [],
+          tasks,
+          reportsByTaskId: groupReportsByTask(reports),
+          teacherId: null,
+          studentId: profile.studentId,
+          isLoading: false,
+          isTasksLoading: false,
+          selectedDisciplineId: null,
+        });
+        return;
+      }
+
+      if (role === RoleEnum.ADMIN) {
+        const [disciplines, teachers, tasks] = await Promise.all([
+          scheduleApi.getDisciplines(),
+          scheduleApi.getTeachers(),
+          fetchCurrentTasks(),
+        ]);
+
+        setPartial({
+          disciplines,
+          teachers,
+          tasks,
+          reportsByTaskId: {},
+          teacherId: null,
+          studentId: null,
+          isLoading: false,
+          isTasksLoading: false,
+          selectedDisciplineId: null,
+        });
+        return;
+      }
+
+      setPartial({ isLoading: false, isTasksLoading: false });
+    } catch {
+      setPartial({
+        error: 'Не удалось загрузить данные',
+        isLoading: false,
+        isTasksLoading: false,
+      });
+    }
+  }, [role, setPartial, fetchCurrentTasks]);
 
   const selectDiscipline = useCallback(
     (disciplineId: number | null) => {
-      if (disciplineId === null) {
-        setPartial({ selectedDisciplineId: null, tasks: [] });
-        return;
-      }
-      loadTasks(disciplineId);
+      setPartial({ selectedDisciplineId: disciplineId });
     },
-    [loadTasks, setPartial]
+    [setPartial]
   );
 
   const reloadStudentTasks = useCallback(async () => {
     if (!isStudentView || state.studentId == null) return;
     setPartial({ isTasksLoading: true, error: null });
     try {
-      await loadStudentAggregate(state.studentId, state.disciplines);
+      await loadStudentAggregate(state.studentId);
       await loadAnalytics();
     } catch {
       setPartial({
@@ -233,7 +232,6 @@ export const useTasks = () => {
   }, [
     isStudentView,
     state.studentId,
-    state.disciplines,
     loadStudentAggregate,
     loadAnalytics,
     setPartial,
@@ -244,26 +242,15 @@ export const useTasks = () => {
       void reloadStudentTasks();
       return;
     }
-    if (state.selectedDisciplineId !== null) {
-      loadTasks(state.selectedDisciplineId);
-    }
+
+    void loadCurrentTasks();
     void loadAnalytics();
-  }, [
-    isStudentView,
-    reloadStudentTasks,
-    state.selectedDisciplineId,
-    loadTasks,
-    loadAnalytics,
-  ]);
+  }, [isStudentView, reloadStudentTasks, loadCurrentTasks, loadAnalytics]);
 
   const refreshTasksAfterTeacherMutation = useCallback(async () => {
-    if (state.selectedDisciplineId !== null) {
-      const tasks = await taskApi.getTasksByDiscipline(
-        state.selectedDisciplineId
-      );
-      setPartial({ tasks });
-    }
-  }, [state.selectedDisciplineId, setPartial]);
+    const tasks = await fetchCurrentTasks();
+    setPartial({ tasks });
+  }, [fetchCurrentTasks, setPartial]);
 
   const addTask = useCallback(
     async (
