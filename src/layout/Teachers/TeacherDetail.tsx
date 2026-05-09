@@ -8,7 +8,6 @@ import {
   FiClock,
   FiFileText,
   FiMail,
-  FiMapPin,
   FiUser,
 } from 'react-icons/fi';
 
@@ -196,10 +195,16 @@ export const TeacherDetail = () => {
                   , {formatTime(lesson.startTime)} —{' '}
                   {formatTime(lesson.endTime)}
                 </span>
-                <b>
-                  <FiMapPin size={16} aria-hidden="true" />
-                  {lesson.room ?? lesson.url ?? '—'}
-                </b>
+                {lesson.room && !lesson.url && <b>Аудитория {lesson.room}</b>}
+                {lesson.url && (
+                  <a
+                    href={lesson.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Зайти на занятие
+                  </a>
+                )}
               </div>
             ))}
           </div>
