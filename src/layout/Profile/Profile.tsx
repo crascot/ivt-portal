@@ -1,10 +1,14 @@
 import {
   type CSSProperties,
+  type ChangeEvent,
+  type FormEvent,
   type ReactNode,
+  useCallback,
   useEffect,
   useMemo,
   useState,
 } from 'react';
+import { Alert, Button, Form, Modal, Spinner } from 'react-bootstrap';
 import { Link, Navigate } from 'react-router-dom';
 import {
   FiBell,
@@ -22,12 +26,14 @@ import {
   FiUploadCloud,
   FiUser,
   FiUsers,
+  FiSettings,
 } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
 
 import { adminAuthApi } from '@api/admin/adminAuthApi';
 import { adminDisciplineApi } from '@api/admin/adminDiscipline';
 import { adminGroupApi } from '@api/admin/adminGroupApi';
+import { profileApi } from '@api/profileApi';
 import { scheduleApi } from '@api/scheduleApi';
 import { taskApi } from '@api/taskApi';
 import { ummApi } from '@api/ummApi';
@@ -85,6 +91,8 @@ const ROLE_LABELS: Record<RoleEnum, string> = {
   [RoleEnum.STUDENT]: 'Студент',
   [RoleEnum.GROUP_LEADER]: 'Староста',
 };
+
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
 
 const isStudentRole = (role?: RoleEnum) =>
   role === RoleEnum.STUDENT || role === RoleEnum.GROUP_LEADER;
@@ -155,7 +163,7 @@ const EmptyState = ({ children }: { children: ReactNode }) => (
 );
 
 export const Profile = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, login, logout } = useAuth();
   const { announcements } = useAnnouncements();
   const [taskStats, setTaskStats] = useState<TaskStatisticsDto | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
@@ -181,6 +189,57 @@ export const Profile = () => {
   );
   const [isRoleDataLoading, setIsRoleDataLoading] = useState(false);
   const [roleDataError, setRoleDataError] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isEditOpen, setEditOpen] = useState(false);
+  const [isProfileSaving, setProfileSaving] = useState(false);
+  const [profileFormError, setProfileFormError] = useState<string | null>(null);
+  const [profileForm, setProfileForm] = useState({
+    fullName: '',
+    email: '',
+  });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+
+  const loadAvatar = useCallback(async () => {
+    try {
+      const blob = await profileApi.getAvatarBlob();
+      const url = URL.createObjectURL(blob);
+      setAvatarUrl(url);
+    } catch {
+      setAvatarUrl(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setAvatarUrl(null);
+      return;
+    }
+
+    void loadAvatar();
+  }, [isAuthenticated, loadAvatar, user?.email]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarUrl) {
+        URL.revokeObjectURL(avatarUrl);
+      }
+    };
+  }, [avatarUrl]);
+
+  useEffect(() => {
+    if (!avatarFile) {
+      setAvatarPreviewUrl(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(avatarFile);
+    setAvatarPreviewUrl(url);
+
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [avatarFile]);
 
   const showTaskStats = isAuthenticated && isTaskStatsRole(user?.role);
 
@@ -350,6 +409,93 @@ export const Profile = () => {
     teacherProfile?.enabled ??
     studentProfile?.enabled ??
     true;
+
+  const openProfileEditor = () => {
+    setProfileForm({
+      fullName: displayName,
+      email: displayEmail ?? '',
+    });
+    setAvatarFile(null);
+    setProfileFormError(null);
+    setEditOpen(true);
+  };
+
+  const closeProfileEditor = () => {
+    if (isProfileSaving) return;
+    setEditOpen(false);
+    setAvatarFile(null);
+    setProfileFormError(null);
+  };
+
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+
+    if (!file) {
+      setAvatarFile(null);
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setAvatarFile(null);
+      setProfileFormError('Можно загрузить только изображение');
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_SIZE) {
+      setAvatarFile(null);
+      setProfileFormError('Максимальный размер фото - 5 МБ');
+      event.target.value = '';
+      return;
+    }
+
+    setProfileFormError(null);
+    setAvatarFile(file);
+  };
+
+  const applyProfileData = (fullName: string, email: string) => {
+    setAdminProfile((prev) => (prev ? { ...prev, fullName, email } : prev));
+    setTeacherProfile((prev) => (prev ? { ...prev, fullName, email } : prev));
+    setStudentProfile((prev) => (prev ? { ...prev, fullName, email } : prev));
+  };
+
+  const handleProfileSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const fullName = profileForm.fullName.trim();
+    const email = profileForm.email.trim();
+
+    if (!fullName) {
+      setProfileFormError('Введите имя');
+      return;
+    }
+
+    if (!email || !email.includes('@')) {
+      setProfileFormError('Введите корректную почту');
+      return;
+    }
+
+    setProfileSaving(true);
+    setProfileFormError(null);
+
+    try {
+      const updated = await profileApi.updateMe({ fullName, email });
+      login(updated.token);
+      applyProfileData(updated.fullName, updated.email);
+
+      if (avatarFile) {
+        await profileApi.uploadAvatar(avatarFile);
+      }
+
+      await loadAvatar();
+      setEditOpen(false);
+      setAvatarFile(null);
+    } catch {
+      setProfileFormError('Не удалось сохранить изменения');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   const taskChart = useMemo(() => {
     if (!showTaskStats) return null;
@@ -930,7 +1076,11 @@ export const Profile = () => {
     <div className={s.profilePage}>
       <section className={s.hero}>
         <div className={s.avatarWrap}>
-          <div className={s.avatar}>{getInitial(displayName)}</div>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="Фото профиля" className={s.avatarImage} />
+          ) : (
+            <div className={s.avatar}>{getInitial(displayName)}</div>
+          )}
           <span className={s.onlineDot} />
         </div>
 
@@ -946,11 +1096,110 @@ export const Profile = () => {
           )}
         </div>
 
-        <button type="button" className={s.logoutButton} onClick={logout}>
-          <FiLogOut size={20} aria-hidden="true" />
-          Выйти
-        </button>
+        <div className={s.heroActions}>
+          <button
+            type="button"
+            className={s.editButton}
+            onClick={openProfileEditor}
+          >
+            <FiSettings size={20} aria-hidden="true" />
+          </button>
+          <button type="button" className={s.logoutButton} onClick={logout}>
+            <FiLogOut size={20} aria-hidden="true" />
+            Выйти
+          </button>
+        </div>
       </section>
+
+      <Modal show={isEditOpen} onHide={closeProfileEditor} centered>
+        <Form onSubmit={handleProfileSubmit}>
+          <Modal.Header closeButton>
+            <Modal.Title>Редактировать профиль</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className={s.editModalBody}>
+            {profileFormError && (
+              <Alert variant="danger" className="mb-3">
+                {profileFormError}
+              </Alert>
+            )}
+
+            <div className={s.avatarEditor}>
+              <div className={s.avatarPreview}>
+                {avatarPreviewUrl || avatarUrl ? (
+                  <img
+                    src={avatarPreviewUrl || avatarUrl || undefined}
+                    alt="Предпросмотр фото"
+                  />
+                ) : (
+                  <span>{getInitial(profileForm.fullName || displayName)}</span>
+                )}
+              </div>
+              <Form.Group controlId="profile-avatar" className="flex-grow-1">
+                <Form.Label>Фото профиля</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                />
+                <Form.Text className="text-muted">
+                  Поддерживаются изображения до 5 МБ.
+                </Form.Text>
+              </Form.Group>
+            </div>
+
+            <Form.Group controlId="profile-name" className="mb-3">
+              <Form.Label>Имя</Form.Label>
+              <Form.Control
+                value={profileForm.fullName}
+                onChange={(event) =>
+                  setProfileForm((prev) => ({
+                    ...prev,
+                    fullName: event.target.value,
+                  }))
+                }
+                placeholder="Введите имя"
+                required
+              />
+            </Form.Group>
+
+            <Form.Group controlId="profile-email">
+              <Form.Label>Почта</Form.Label>
+              <Form.Control
+                type="email"
+                value={profileForm.email}
+                onChange={(event) =>
+                  setProfileForm((prev) => ({
+                    ...prev,
+                    email: event.target.value,
+                  }))
+                }
+                placeholder="Введите почту"
+                required
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              type="button"
+              variant="outline-secondary"
+              onClick={closeProfileEditor}
+              disabled={isProfileSaving}
+            >
+              Отмена
+            </Button>
+            <Button type="submit" disabled={isProfileSaving}>
+              {isProfileSaving ? (
+                <>
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  Сохранение...
+                </>
+              ) : (
+                'Сохранить'
+              )}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
 
       {user.role === RoleEnum.ADMIN && renderAdminProfile()}
       {user.role === RoleEnum.TEACHER && renderTeacherProfile()}

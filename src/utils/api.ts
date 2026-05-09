@@ -9,7 +9,9 @@ const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken');
-    if (token) {
+    const isAuthRequest = config.url?.startsWith('/auth/');
+
+    if (token && !isAuthRequest) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     if (config.data instanceof FormData) {
