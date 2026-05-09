@@ -40,6 +40,7 @@ export const TeacherDetail = () => {
   const { teacherId: rawTeacherId } = useParams<{ teacherId: string }>();
   const teacherId = rawTeacherId ? Number(rawTeacherId) : null;
   const [teacher, setTeacher] = useState<TeacherDetailDto | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,6 +78,39 @@ export const TeacherDetail = () => {
     };
   }, [teacherId]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!teacher?.hasAvatar) {
+      setAvatarUrl(null);
+      return;
+    }
+
+    teacherDirectoryApi
+      .getTeacherAvatarBlob(teacher.id)
+      .then((blob) => {
+        if (!isMounted) return;
+        setAvatarUrl(URL.createObjectURL(blob));
+      })
+      .catch(() => {
+        if (isMounted) {
+          setAvatarUrl(null);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [teacher]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarUrl) {
+        URL.revokeObjectURL(avatarUrl);
+      }
+    };
+  }, [avatarUrl]);
+
   const schedulePreview = useMemo(() => {
     return teacher?.schedules.slice(0, 4) ?? [];
   }, [teacher]);
@@ -107,7 +141,15 @@ export const TeacherDetail = () => {
       </Link>
 
       <section className={s.detailHero}>
-        <div className={s.detailAvatar}>{getInitials(teacher.fullName)}</div>
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt={teacher.fullName}
+            className={s.detailAvatarImage}
+          />
+        ) : (
+          <div className={s.detailAvatar}>{getInitials(teacher.fullName)}</div>
+        )}
 
         <div className={s.detailInfo}>
           <h1>{teacher.fullName}</h1>

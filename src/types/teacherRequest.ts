@@ -35,6 +35,7 @@ export type TeacherDirectoryItemDto = {
   fullName: string;
   email: string;
   position: string;
+  hasAvatar: boolean;
   disciplinesCount: number;
   materialsCount: number;
 };
@@ -78,6 +79,7 @@ export type TeacherDetailDto = {
   email: string;
   position: string;
   enabled: boolean;
+  hasAvatar: boolean;
   disciplinesCount: number;
   materialsCount: number;
   disciplines: TeacherDirectoryDisciplineDto[];

@@ -31,6 +31,9 @@ const teacherPath = (teacherId: number) =>
 
 export const Teachers = () => {
   const [teachers, setTeachers] = useState<TeacherDirectoryItemDto[]>([]);
+  const [teacherAvatars, setTeacherAvatars] = useState<Record<number, string>>(
+    {}
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -65,6 +68,47 @@ export const Teachers = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+    const urls: string[] = [];
+    const teachersWithAvatars = teachers.filter((teacher) => teacher.hasAvatar);
+
+    if (teachersWithAvatars.length === 0) {
+      setTeacherAvatars({});
+      return;
+    }
+
+    Promise.all(
+      teachersWithAvatars.map(async (teacher) => {
+        try {
+          const blob = await teacherDirectoryApi.getTeacherAvatarBlob(
+            teacher.id
+          );
+          const url = URL.createObjectURL(blob);
+          urls.push(url);
+          return [teacher.id, url] as const;
+        } catch {
+          return null;
+        }
+      })
+    ).then((entries) => {
+      if (!isMounted) return;
+
+      setTeacherAvatars(
+        Object.fromEntries(
+          entries.filter(
+            (entry): entry is readonly [number, string] => entry !== null
+          )
+        )
+      );
+    });
+
+    return () => {
+      isMounted = false;
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [teachers]);
+
   const filteredTeachers = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return teachers;
@@ -82,7 +126,15 @@ export const Teachers = () => {
       to={teacherPath(teacher.id)}
       className={`${s.teacherCard} ${viewMode === 'list' ? s.listCard : ''}`}
     >
-      <div className={s.avatar}>{getInitials(teacher.fullName)}</div>
+      {teacherAvatars[teacher.id] ? (
+        <img
+          src={teacherAvatars[teacher.id]}
+          alt={teacher.fullName}
+          className={s.avatarImage}
+        />
+      ) : (
+        <div className={s.avatar}>{getInitials(teacher.fullName)}</div>
+      )}
 
       <div className={s.teacherInfo}>
         <h2>{teacher.fullName}</h2>

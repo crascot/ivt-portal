@@ -151,6 +151,20 @@
   font-size: 2rem;
 }
 
+.avatarImage,
+.detailAvatarImage {
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(52, 58, 64, 0.12);
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.08);
+  flex-shrink: 0;
+}
+
+.avatarImage {
+  width: 108px;
+  height: 108px;
+}
+
 .teacherInfo {
   min-width: 0;
 }
@@ -261,6 +275,11 @@
   width: 132px;
   height: 132px;
   font-size: 2.4rem;
+}
+
+.detailAvatarImage {
+  width: 132px;
+  height: 132px;
 }
 
 .contactList {
@@ -453,9 +472,15 @@
   }
 
   .avatar,
-  .detailAvatar {
+  .avatarImage,
+  .detailAvatar,
+  .detailAvatarImage {
     width: 92px;
     height: 92px;
+  }
+
+  .avatar,
+  .detailAvatar {
     font-size: 1.7rem;
   }
 

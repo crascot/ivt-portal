@@ -14,4 +14,11 @@ export const teacherDirectoryApi = {
     const { data } = await api.get<TeacherDetailDto>(`/teachers/${teacherId}`);
     return data;
   },
+
+  async getTeacherAvatarBlob(teacherId: number): Promise<Blob> {
+    const { data } = await api.get<Blob>(`/teachers/${teacherId}/avatar`, {
+      responseType: 'blob',
+    });
+    return data;
+  },
 };
