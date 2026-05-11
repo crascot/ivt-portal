@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Modal } from 'react-bootstrap';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import {
   FiBookOpen,
@@ -8,12 +9,21 @@ import {
   FiClock,
   FiFileText,
   FiMail,
+  FiMessageCircle,
+  FiPhone,
   FiUser,
 } from 'react-icons/fi';
 
+import { scheduleApi } from '@api/scheduleApi';
 import { teacherDirectoryApi } from '@api/teacherDirectoryApi';
+import { useAuth } from '@context/AuthContext';
+import { RoleEnum } from '@entities/role-enum';
 import { TeacherDetailDto } from '@entities/teacherRequest';
-import { DAY_OF_WEEK_LABELS, DayOfWeek } from '@entities/scheduleRequest';
+import {
+  DAY_OF_WEEK_LABELS,
+  DayOfWeek,
+  StudentProfile,
+} from '@entities/scheduleRequest';
 import { ROUTES } from '@utils/routes';
 import { ummDisciplinePath } from '@utils/ummRoutes';
 
@@ -36,11 +46,40 @@ const formatTime = (time: string) => {
   return time.length >= 5 ? time.slice(0, 5) : time;
 };
 
+const isStudentRole = (role?: RoleEnum) =>
+  role === RoleEnum.STUDENT || role === RoleEnum.GROUP_LEADER;
+
+const normalizePhoneForHref = (value: string) => {
+  return value.replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '');
+};
+
+const createTelHref = (value?: string | null) => {
+  if (!value) return null;
+
+  const normalized = normalizePhoneForHref(value);
+  return /\d/.test(normalized) ? `tel:${normalized}` : null;
+};
+
+const createWhatsAppHref = (value?: string | null, message?: string) => {
+  if (!value) return null;
+
+  const normalized = value.replace(/\D/g, '');
+  if (!normalized) return null;
+
+  const query = message ? `?text=${encodeURIComponent(message)}` : '';
+  return `https://wa.me/${normalized}${query}`;
+};
+
 export const TeacherDetail = () => {
   const { teacherId: rawTeacherId } = useParams<{ teacherId: string }>();
+  const { user, isAuthenticated } = useAuth();
   const teacherId = rawTeacherId ? Number(rawTeacherId) : null;
   const [teacher, setTeacher] = useState<TeacherDetailDto | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(
+    null
+  );
+  const [isContactModalOpen, setContactModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -111,9 +150,55 @@ export const TeacherDetail = () => {
     };
   }, [avatarUrl]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!isAuthenticated || !isStudentRole(user?.role)) {
+      setStudentProfile(null);
+      return;
+    }
+
+    scheduleApi
+      .getStudentProfile()
+      .then((profile) => {
+        if (isMounted) {
+          setStudentProfile(profile);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setStudentProfile(null);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, user?.email, user?.role]);
+
   const schedulePreview = useMemo(() => {
     return teacher?.schedules.slice(0, 4) ?? [];
   }, [teacher]);
+
+  const whatsAppMessage = useMemo(() => {
+    if (!isStudentRole(user?.role)) return undefined;
+
+    const studentName = studentProfile?.fullName || user?.fullName || 'студент';
+    const groupName = studentProfile?.group;
+    const groupPart = groupName ? ` с группы ${groupName}` : '';
+
+    return `Добрый день, я ${studentName}${groupPart}, хотел задать вопрос.`;
+  }, [studentProfile, user?.fullName, user?.role]);
+
+  const telHref = useMemo(
+    () => createTelHref(teacher?.phoneNumber),
+    [teacher?.phoneNumber]
+  );
+
+  const whatsAppHref = useMemo(
+    () => createWhatsAppHref(teacher?.whatsApp, whatsAppMessage),
+    [teacher?.whatsApp, whatsAppMessage]
+  );
 
   if (teacherId == null || Number.isNaN(teacherId)) {
     return <Navigate to={ROUTES.TEACHERS} replace />;
@@ -160,6 +245,18 @@ export const TeacherDetail = () => {
               <FiMail size={18} aria-hidden="true" />
               {teacher.email}
             </span>
+            {teacher.phoneNumber && (
+              <span>
+                <FiPhone size={18} aria-hidden="true" />
+                {teacher.phoneNumber}
+              </span>
+            )}
+            {teacher.whatsApp && (
+              <span>
+                <FiMessageCircle size={18} aria-hidden="true" />
+                WhatsApp: {teacher.whatsApp}
+              </span>
+            )}
             <span>
               <FiBookOpen size={18} aria-hidden="true" />
               Дисциплин: {teacher.disciplinesCount}
@@ -172,10 +269,14 @@ export const TeacherDetail = () => {
         </div>
 
         <div className={s.detailActions}>
-          <a href={`mailto:${teacher.email}`} className={s.primaryButton}>
+          <button
+            type="button"
+            className={s.primaryButton}
+            onClick={() => setContactModalOpen(true)}
+          >
             <FiMail size={18} aria-hidden="true" />
             Сообщение
-          </a>
+          </button>
           <Link
             to={teacherSchedulePath(teacher.id)}
             className={s.secondaryButton}
@@ -286,9 +387,94 @@ export const TeacherDetail = () => {
       <section className={s.infoPanel}>
         <FiUser size={22} aria-hidden="true" />
         <span>
-          По вопросам занятий и материалов обращайтесь к преподавателю по email.
+          По вопросам занятий и материалов выберите удобный способ связи с
+          преподавателем.
         </span>
       </section>
+
+      <Modal
+        show={isContactModalOpen}
+        onHide={() => setContactModalOpen(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Связаться с преподавателем</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className={s.contactOptions}>
+            {teacher.email ? (
+              <a href={`mailto:${teacher.email}`} className={s.contactOption}>
+                <FiMail size={22} aria-hidden="true" />
+                <span>
+                  <strong>Email</strong>
+                  <small>{teacher.email}</small>
+                </span>
+              </a>
+            ) : (
+              <button
+                type="button"
+                className={`${s.contactOption} ${s.disabledOption}`}
+                disabled
+              >
+                <FiMail size={22} aria-hidden="true" />
+                <span>
+                  <strong>Email</strong>
+                  <small>Почта не указана</small>
+                </span>
+              </button>
+            )}
+
+            {telHref ? (
+              <a href={telHref} className={s.contactOption}>
+                <FiPhone size={22} aria-hidden="true" />
+                <span>
+                  <strong>Телефон</strong>
+                  <small>{teacher.phoneNumber}</small>
+                </span>
+              </a>
+            ) : (
+              <button
+                type="button"
+                className={`${s.contactOption} ${s.disabledOption}`}
+                disabled
+              >
+                <FiPhone size={22} aria-hidden="true" />
+                <span>
+                  <strong>Телефон</strong>
+                  <small>Номер не указан</small>
+                </span>
+              </button>
+            )}
+
+            {whatsAppHref ? (
+              <a
+                href={whatsAppHref}
+                className={s.contactOption}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <FiMessageCircle size={22} aria-hidden="true" />
+                <span>
+                  <strong>WhatsApp</strong>
+                  <small>{teacher.whatsApp}</small>
+                </span>
+              </a>
+            ) : (
+              <button
+                type="button"
+                className={`${s.contactOption} ${s.disabledOption}`}
+                disabled
+              >
+                <FiMessageCircle size={22} aria-hidden="true" />
+                <span>
+                  <strong>WhatsApp</strong>
+                  <small>WhatsApp не указан</small>
+                </span>
+              </button>
+            )}
+          </div>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };

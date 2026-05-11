@@ -1,6 +1,8 @@
 export type UpdateProfileRequest = {
   fullName: string;
   email: string;
+  phoneNumber?: string;
+  whatsApp?: string;
 };
 
 export type UpdatedProfileDto = {
@@ -9,4 +11,6 @@ export type UpdatedProfileDto = {
   email: string;
   token: string;
   hasAvatar: boolean;
+  phoneNumber: string | null;
+  whatsApp: string | null;
 };

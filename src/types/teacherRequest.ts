@@ -77,6 +77,8 @@ export type TeacherDetailDto = {
   id: number;
   fullName: string;
   email: string;
+  phoneNumber: string | null;
+  whatsApp: string | null;
   position: string;
   enabled: boolean;
   hasAvatar: boolean;

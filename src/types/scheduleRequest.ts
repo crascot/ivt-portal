@@ -100,6 +100,8 @@ export type TeacherProfile = {
   enabled: boolean;
   roles: string[];
   position: string;
+  phoneNumber: string | null;
+  whatsApp: string | null;
   teacherId: number;
 };
 

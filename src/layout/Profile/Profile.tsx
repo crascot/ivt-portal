@@ -22,6 +22,8 @@ import {
   FiGrid,
   FiLogOut,
   FiMail,
+  FiMessageCircle,
+  FiPhone,
   FiShield,
   FiUploadCloud,
   FiUser,
@@ -123,6 +125,39 @@ const formatTime = (value?: string | null) => {
   return value.length >= 5 ? value.slice(0, 5) : value;
 };
 
+const getPhoneDigits = (value: string) => value.replace(/\D/g, '');
+
+const isValidPhoneContact = (value: string) => {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) return true;
+  if (!/^\+?[\d\s()-]+$/.test(trimmedValue)) return false;
+
+  const digitsCount = getPhoneDigits(trimmedValue).length;
+  return digitsCount >= 7 && digitsCount <= 15;
+};
+
+const formatPhoneInput = (value: string) => {
+  const startsWithPlus = value.trim().startsWith('+');
+  const digits = getPhoneDigits(value).slice(0, 15);
+
+  if (!digits) return startsWithPlus ? '+' : '';
+
+  if (digits.startsWith('996')) {
+    const country = digits.slice(0, 3);
+    const operator = digits.slice(3, 6);
+    const firstPart = digits.slice(6, 9);
+    const secondPart = digits.slice(9, 12);
+    return [country ? `+${country}` : '', operator, firstPart, secondPart]
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  const prefix = startsWithPlus ? '+' : '';
+  const groups = digits.match(/.{1,3}/g) ?? [];
+  return `${prefix}${groups.join(' ')}`;
+};
+
 const getDayIndex = (day: TeacherScheduleDto['dayOfWeek']) => {
   const index = DAY_OF_WEEK_ORDER.indexOf(day);
   return index === -1 ? DAY_OF_WEEK_ORDER.length : index;
@@ -196,6 +231,8 @@ export const Profile = () => {
   const [profileForm, setProfileForm] = useState({
     fullName: '',
     email: '',
+    phoneNumber: '',
+    whatsApp: '',
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
@@ -414,6 +451,8 @@ export const Profile = () => {
     setProfileForm({
       fullName: displayName,
       email: displayEmail ?? '',
+      phoneNumber: teacherProfile?.phoneNumber ?? '',
+      whatsApp: teacherProfile?.whatsApp ?? '',
     });
     setAvatarFile(null);
     setProfileFormError(null);
@@ -453,9 +492,16 @@ export const Profile = () => {
     setAvatarFile(file);
   };
 
-  const applyProfileData = (fullName: string, email: string) => {
+  const applyProfileData = (
+    fullName: string,
+    email: string,
+    phoneNumber: string | null,
+    whatsApp: string | null
+  ) => {
     setAdminProfile((prev) => (prev ? { ...prev, fullName, email } : prev));
-    setTeacherProfile((prev) => (prev ? { ...prev, fullName, email } : prev));
+    setTeacherProfile((prev) =>
+      prev ? { ...prev, fullName, email, phoneNumber, whatsApp } : prev
+    );
     setStudentProfile((prev) => (prev ? { ...prev, fullName, email } : prev));
   };
 
@@ -464,6 +510,8 @@ export const Profile = () => {
 
     const fullName = profileForm.fullName.trim();
     const email = profileForm.email.trim();
+    const phoneNumber = profileForm.phoneNumber.trim();
+    const whatsApp = profileForm.whatsApp.trim();
 
     if (!fullName) {
       setProfileFormError('Введите имя');
@@ -475,13 +523,32 @@ export const Profile = () => {
       return;
     }
 
+    if (
+      user?.role === RoleEnum.TEACHER &&
+      (!isValidPhoneContact(phoneNumber) || !isValidPhoneContact(whatsApp))
+    ) {
+      setProfileFormError(
+        'Введите номер в международном формате: только цифры, пробелы, +, скобки или дефисы'
+      );
+      return;
+    }
+
     setProfileSaving(true);
     setProfileFormError(null);
 
     try {
-      const updated = await profileApi.updateMe({ fullName, email });
+      const payload =
+        user?.role === RoleEnum.TEACHER
+          ? { fullName, email, phoneNumber, whatsApp }
+          : { fullName, email };
+      const updated = await profileApi.updateMe(payload);
       login(updated.token);
-      applyProfileData(updated.fullName, updated.email);
+      applyProfileData(
+        updated.fullName,
+        updated.email,
+        updated.phoneNumber,
+        updated.whatsApp
+      );
 
       if (avatarFile) {
         await profileApi.uploadAvatar(avatarFile);
@@ -562,6 +629,26 @@ export const Profile = () => {
       value: teacherProfile.position,
       icon: FiClipboard,
     });
+  }
+
+  if (teacherProfile) {
+    const statusIndex = accountRows.findIndex(
+      (item) => item.label === 'Статус'
+    );
+    accountRows.splice(
+      statusIndex === -1 ? accountRows.length : statusIndex,
+      0,
+      {
+        label: 'Телефон',
+        value: teacherProfile.phoneNumber || '—',
+        icon: FiPhone,
+      },
+      {
+        label: 'WhatsApp',
+        value: teacherProfile.whatsApp || '—',
+        icon: FiMessageCircle,
+      }
+    );
   }
 
   if (studentProfile?.group) {
@@ -1177,6 +1264,51 @@ export const Profile = () => {
                 required
               />
             </Form.Group>
+
+            {user.role === RoleEnum.TEACHER && (
+              <>
+                <Form.Group controlId="profile-phone">
+                  <Form.Label>Телефон</Form.Label>
+                  <Form.Control
+                    type="tel"
+                    inputMode="tel"
+                    value={profileForm.phoneNumber}
+                    onChange={(event) =>
+                      setProfileForm((prev) => ({
+                        ...prev,
+                        phoneNumber: formatPhoneInput(event.target.value),
+                      }))
+                    }
+                    placeholder="+996 555 000 000"
+                    maxLength={40}
+                  />
+                  <Form.Text className="text-muted">
+                    Допустимо 7-15 цифр, можно использовать +, пробелы, скобки и
+                    дефисы.
+                  </Form.Text>
+                </Form.Group>
+
+                <Form.Group controlId="profile-whatsapp">
+                  <Form.Label>WhatsApp</Form.Label>
+                  <Form.Control
+                    type="tel"
+                    inputMode="tel"
+                    value={profileForm.whatsApp}
+                    onChange={(event) =>
+                      setProfileForm((prev) => ({
+                        ...prev,
+                        whatsApp: formatPhoneInput(event.target.value),
+                      }))
+                    }
+                    placeholder="+996 555 000 000"
+                    maxLength={40}
+                  />
+                  <Form.Text className="text-muted">
+                    Номер будет использоваться для ссылки WhatsApp.
+                  </Form.Text>
+                </Form.Group>
+              </>
+            )}
           </Modal.Body>
           <Modal.Footer>
             <Button

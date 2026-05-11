@@ -307,12 +307,14 @@
 .secondaryButton {
   min-height: 44px;
   padding: 10px 16px;
+  border: 0;
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   font-weight: 800;
+  cursor: pointer;
 }
 
 .primaryButton {
@@ -324,6 +326,70 @@
   border: 1px solid rgba(0, 123, 255, 0.24);
   background: var(--background-color);
   color: var(--primary-color);
+}
+
+.contactOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contactOption {
+  width: 100%;
+  min-height: 72px;
+  padding: 14px;
+  border: 1px solid rgba(52, 58, 64, 0.12);
+  border-radius: 8px;
+  background: var(--background-color);
+  color: var(--text-color);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.contactOption:hover {
+  border-color: rgba(0, 123, 255, 0.24);
+  background: rgba(0, 123, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.contactOption svg {
+  color: var(--primary-color);
+}
+
+.contactOption span {
+  min-width: 0;
+}
+
+.contactOption strong,
+.contactOption small {
+  display: block;
+}
+
+.contactOption strong {
+  color: var(--text-color);
+  font-size: 0.98rem;
+}
+
+.contactOption small {
+  margin-top: 2px;
+  color: var(--secondary-color);
+  overflow-wrap: anywhere;
+}
+
+.disabledOption,
+.disabledOption:hover {
+  background: rgba(248, 251, 255, 0.55);
+  color: var(--secondary-color);
+  cursor: not-allowed;
+  opacity: 0.72;
+  transform: none;
 }
 
 .detailSection {
