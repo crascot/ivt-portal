@@ -15,6 +15,7 @@ import SignIn from '@pages/sign-in';
 import SignUp from '@pages/sign-up';
 import PendingApproval from '@pages/pending-approval';
 import PendingUsers from '@pages/pending-users';
+import AdminUsers from '@pages/admin-users';
 import Groups from '@pages/groups';
 import Disciplines from '@pages/discipline';
 import NotFound from '@pages/not-found';
@@ -25,6 +26,7 @@ import TeacherDetail from '@pages/teacher-detail';
 import TeacherSchedulePage from '@pages/teacher-schedule';
 import Statistics from '@pages/statistics';
 import Umm from '@pages/umm';
+import UmmMethodical from '@pages/umm-methodical';
 import UmmDiscipline from '@pages/umm-discipline';
 import UmmDetail from '@pages/umm-detail';
 import NotificationsHistory from '@pages/notifications-history';
@@ -95,6 +97,10 @@ const App = () => {
                 />
                 <Route path={ROUTES.UMM} element={<Umm />} />
                 <Route
+                  path={ROUTES.UMM_METHODICAL}
+                  element={<UmmMethodical />}
+                />
+                <Route
                   path={ROUTES.UMM_DISCIPLINE}
                   element={<UmmDiscipline />}
                 />
@@ -113,6 +119,7 @@ const App = () => {
                   path={ROUTES.ADMIN_PENDING_USERS}
                   element={<PendingUsers />}
                 />
+                <Route path={ROUTES.ADMIN_USERS} element={<AdminUsers />} />
                 <Route path={ROUTES.ADMIN_GROUPS} element={<Groups />} />
                 <Route
                   path={ROUTES.ADMIN_DISCIPLINES}

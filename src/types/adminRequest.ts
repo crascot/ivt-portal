@@ -19,11 +19,7 @@ export type PendingUsersType = {
   status: string;
 };
 
-enum UserStatus {
-  PENDING,
-  APPROVED,
-  REJECTED,
-}
+export type UserStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'DELETED';
 
 export type Group = {
   id: number;
@@ -95,4 +91,35 @@ export type CreateDisciplineDto = {
 export type UpdateDisciplineDto = {
   name: string;
   description: string;
+};
+
+export type ManagedUser = {
+  id: number;
+  fullName: string;
+  email: string;
+  status: UserStatus;
+  enabled: boolean;
+  confirmed: boolean;
+  roles: RoleEnum[];
+  primaryRole: RoleEnum | null;
+  studentProfileId: number | null;
+  groupId: number | null;
+  groupName: string | null;
+  groupLeader: boolean;
+  teacherProfileId: number | null;
+  teacherPosition: string | null;
+  teacherPhoneNumber: string | null;
+  teacherWhatsApp: string | null;
+};
+
+export type ManagedUserFilters = {
+  search?: string;
+  role?: RoleEnum | '';
+  status?: UserStatus | '';
+};
+
+export type UpdateManagedUserDto = {
+  groupId?: number;
+  groupLeader?: boolean;
+  teacherPosition?: string | null;
 };

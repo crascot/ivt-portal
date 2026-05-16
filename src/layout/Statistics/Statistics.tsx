@@ -586,7 +586,7 @@ export const Statistics = () => {
           onClick={loadData}
           disabled={isLoading}
         >
-          <FaRedo />
+          <FaRedo className={s.refreshButtonIcon} />
           Обновить
         </Button>
       </header>

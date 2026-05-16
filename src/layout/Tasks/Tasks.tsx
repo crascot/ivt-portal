@@ -10,7 +10,7 @@ import {
 } from '@entities/taskRequest';
 import { ReportDto } from '@entities/teacherRequest';
 import { useTasks } from '@hooks/tasks/useTasks';
-import { computeTaskStatus } from '@utils/taskStatus';
+import { computeTaskStatus, pickLatestReport } from '@utils/taskStatus';
 
 import { TaskBoard } from './components/TaskBoard';
 import { formatTaskDate, ManagerTaskStatus } from './taskUi';
@@ -31,16 +31,6 @@ const ROLE_SUBTITLES: Record<RoleEnum, string> = {
   [RoleEnum.GROUP_LEADER]: 'Просмотр заданий и отправка выполненных работ',
   [RoleEnum.ADMIN]:
     'Создание заданий от имени преподавателей и контроль ответов',
-};
-
-const getLatestReport = (reports: ReportDto[]): ReportDto | null => {
-  if (reports.length === 0) return null;
-
-  return reports.reduce((latest, current) => {
-    const currentTime = new Date(current.submittedAt).getTime();
-    const latestTime = new Date(latest.submittedAt).getTime();
-    return currentTime > latestTime ? current : latest;
-  });
 };
 
 const getStudentBoardStatus = (
@@ -125,7 +115,7 @@ export const Tasks = () => {
   const renderStudentInfoCell = useCallback(
     (task: TaskDto) => {
       const reports = reportsByTaskId[task.id] ?? [];
-      const latestReport = getLatestReport(reports);
+      const latestReport = pickLatestReport(reports);
 
       if (!latestReport) {
         return (
@@ -169,7 +159,7 @@ export const Tasks = () => {
           disabled={isTasksLoading}
           className={s.refreshButton}
         >
-          <FiRefreshCw />
+          <FiRefreshCw className={s.refreshButtonIcon} />
           Обновить
         </Button>
       </header>

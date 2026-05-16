@@ -28,6 +28,7 @@
 
 .card {
   border: 1px solid var(--bs-border-color, #dee2e6);
+  min-width: 0;
 }
 
 .titleRow {
@@ -40,10 +41,15 @@
 
 .title {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .content {
   margin-bottom: 0.5rem;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .meta {
@@ -52,6 +58,12 @@
   gap: 0.5rem 1rem;
   color: var(--bs-secondary-color, #6c757d);
   font-size: 0.875rem;
+}
+
+.meta span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .actions {

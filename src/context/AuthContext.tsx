@@ -1,12 +1,15 @@
 import {
   ReactNode,
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
+import { profileApi } from '@api/profileApi';
 import {
   decodeToken,
   getToken,
@@ -35,8 +38,10 @@ type AuthContextValue = {
   token: string | null;
   user: AuthUser | null;
   isAuthenticated: boolean;
+  avatarUrl: string | null;
   login: (token: string) => void;
   logout: () => void;
+  reloadAvatar: () => Promise<void>;
   hasRole: (roles: RoleEnum | RoleEnum[]) => boolean;
 };
 
@@ -158,8 +163,53 @@ export const AuthProvider = ({ children }: Props) => {
   const [token, setTokenState] = useState<string | null>(() =>
     getInitialToken()
   );
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const avatarUrlRef = useRef<string | null>(null);
+  const avatarRequestIdRef = useRef(0);
 
   const user = useMemo(() => mapTokenToUser(token), [token]);
+
+  const setAvatarObjectUrl = useCallback((nextUrl: string | null) => {
+    const currentUrl = avatarUrlRef.current;
+
+    if (currentUrl) {
+      URL.revokeObjectURL(currentUrl);
+    }
+
+    avatarUrlRef.current = nextUrl;
+    setAvatarUrl(nextUrl);
+  }, []);
+
+  const clearAvatar = useCallback(() => {
+    avatarRequestIdRef.current += 1;
+    setAvatarObjectUrl(null);
+  }, [setAvatarObjectUrl]);
+
+  const reloadAvatar = useCallback(async () => {
+    if (!token) {
+      clearAvatar();
+      return;
+    }
+
+    const requestId = avatarRequestIdRef.current + 1;
+    avatarRequestIdRef.current = requestId;
+
+    try {
+      const blob = await profileApi.getAvatarBlob();
+      const nextUrl = URL.createObjectURL(blob);
+
+      if (avatarRequestIdRef.current !== requestId) {
+        URL.revokeObjectURL(nextUrl);
+        return;
+      }
+
+      setAvatarObjectUrl(nextUrl);
+    } catch {
+      if (avatarRequestIdRef.current === requestId) {
+        setAvatarObjectUrl(null);
+      }
+    }
+  }, [clearAvatar, setAvatarObjectUrl, token]);
 
   useEffect(() => {
     if (!token) return;
@@ -169,6 +219,24 @@ export const AuthProvider = ({ children }: Props) => {
       setTokenState(null);
     }
   }, [token, user]);
+
+  useEffect(() => {
+    if (!token || !user) {
+      clearAvatar();
+      return;
+    }
+
+    void reloadAvatar();
+  }, [clearAvatar, reloadAvatar, token, user]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarUrlRef.current) {
+        URL.revokeObjectURL(avatarUrlRef.current);
+        avatarUrlRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handleStorage = () => {
@@ -183,6 +251,7 @@ export const AuthProvider = ({ children }: Props) => {
   }, []);
 
   const login = (nextToken: string) => {
+    clearAvatar();
     setToken(nextToken);
     setTokenState(nextToken);
   };
@@ -190,6 +259,7 @@ export const AuthProvider = ({ children }: Props) => {
   const logout = () => {
     removeToken();
     setTokenState(null);
+    clearAvatar();
   };
 
   const hasRole = (requiredRoles: RoleEnum | RoleEnum[]) => {
@@ -211,12 +281,14 @@ export const AuthProvider = ({ children }: Props) => {
       token,
       user,
       isAuthenticated: !!token,
+      avatarUrl,
       login,
       logout,
+      reloadAvatar,
       hasRole,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [token, user]
+    [token, user, avatarUrl, reloadAvatar]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

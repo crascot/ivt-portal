@@ -9,15 +9,34 @@ export type TaskStatusInfo = {
   isOverdue: boolean;
 };
 
-const pickLatestReport = (reports: ReportDto[]): ReportDto | null => {
+const parseReportSubmittedAt = (iso: string): number => {
+  const time = new Date(iso).getTime();
+  return Number.isFinite(time) ? time : 0;
+};
+
+export const compareReportRecency = (
+  first: ReportDto,
+  second: ReportDto
+): number => {
+  const submittedAtDiff =
+    parseReportSubmittedAt(first.submittedAt) -
+    parseReportSubmittedAt(second.submittedAt);
+
+  if (submittedAtDiff !== 0) return submittedAtDiff;
+
+  return first.id - second.id;
+};
+
+export const pickLatestReport = (reports: ReportDto[]): ReportDto | null => {
   if (reports.length === 0) return null;
 
   return reports.reduce((latest, current) => {
-    const currentTime = new Date(current.submittedAt).getTime();
-    const latestTime = new Date(latest.submittedAt).getTime();
-    return currentTime > latestTime ? current : latest;
+    return compareReportRecency(current, latest) > 0 ? current : latest;
   });
 };
+
+export const isReportAcceptedAndGraded = (report: ReportDto): boolean =>
+  report.status === ReportStatus.Accepted && report.grade != null;
 
 export const computeTaskStatus = (
   task: TaskDto,
@@ -38,7 +57,7 @@ export const computeTaskStatus = (
   const submittedTime = new Date(latestReport.submittedAt).getTime();
   const submittedLate = deadlineTime != null && submittedTime > deadlineTime;
 
-  if (latestReport.status === ReportStatus.Accepted) {
+  if (isReportAcceptedAndGraded(latestReport)) {
     return {
       status: submittedLate
         ? StudentTaskStatus.AcceptedLate

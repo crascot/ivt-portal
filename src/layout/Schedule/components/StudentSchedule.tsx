@@ -54,6 +54,7 @@ const mapStudentSchedule = (
     title: item.disciplineName,
     teacherName: item.teacherName,
     room: item.room,
+    url: item.url,
     dateLabel: formatDate(item.startDateTime),
   }));
 

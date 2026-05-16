@@ -43,8 +43,11 @@
 .refreshButton {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
   flex: 0 0 auto;
+}
+
+.refreshButtonIcon {
+  margin-right: 0.45rem;
 }
 
 .loading {

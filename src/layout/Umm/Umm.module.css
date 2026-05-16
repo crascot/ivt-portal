@@ -497,6 +497,109 @@
   gap: 12px;
 }
 
+.catalogOverview {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.42fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 18px;
+}
+
+.methodicalFeatureCard {
+  min-height: 100%;
+  padding: 22px;
+  border: 1px solid rgba(0, 123, 255, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(0, 123, 255, 0.06), transparent 58%),
+    var(--background-color);
+  color: inherit;
+  box-shadow: 0 12px 32px rgba(17, 24, 39, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.methodicalFeatureCard:hover {
+  border-color: rgba(0, 123, 255, 0.36);
+  box-shadow: 0 16px 38px rgba(17, 24, 39, 0.08);
+  transform: translateY(-2px);
+}
+
+.methodicalFeatureIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  background: rgba(0, 123, 255, 0.1);
+  color: var(--primary-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.methodicalFeatureCard h2 {
+  margin: 0;
+  max-width: 220px;
+  color: var(--text-color);
+  font-size: 1.18rem;
+  font-weight: 900;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.methodicalFeatureCard p {
+  margin: 0;
+  max-width: 260px;
+  color: var(--secondary-color);
+  line-height: 1.55;
+}
+
+.methodicalFeatureNote,
+.methodicalHeroBadge {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid rgba(0, 123, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 123, 255, 0.08);
+  color: var(--secondary-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.methodicalFeatureCard strong {
+  min-height: 38px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(0, 123, 255, 0.1);
+  color: var(--primary-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.methodicalFeatureButton {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 8px;
+  background: var(--primary-color);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
 .disciplineGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -684,6 +787,141 @@
   gap: 8px;
 }
 
+.backInlineLink {
+  width: fit-content;
+  margin-bottom: 12px;
+  color: var(--primary-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.methodicalHeroBadge {
+  color: var(--primary-color);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.methodicalHeroBadge strong {
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+.methodicalFilters {
+  padding: 20px;
+  border: 1px solid rgba(52, 58, 64, 0.1);
+  border-radius: 8px;
+  background: var(--background-color);
+  box-shadow: 0 12px 30px rgba(17, 24, 39, 0.04);
+  display: grid;
+  grid-template-columns: minmax(260px, 1.2fr) minmax(220px, 0.7fr) auto;
+  align-items: end;
+  gap: 16px;
+}
+
+.methodicalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.methodicalCard {
+  min-width: 0;
+  min-height: 250px;
+  padding: 18px;
+  border: 1px solid rgba(52, 58, 64, 0.1);
+  border-radius: 8px;
+  background: var(--background-color);
+  box-shadow: 0 10px 26px rgba(17, 24, 39, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.methodicalCard:hover {
+  border-color: rgba(0, 123, 255, 0.22);
+  box-shadow: 0 14px 34px rgba(17, 24, 39, 0.08);
+  transform: translateY(-2px);
+}
+
+.methodicalCardTop {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+}
+
+.methodicalCardTop h3 {
+  margin: 0 0 8px;
+  color: var(--text-color);
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.methodicalCardTop p {
+  margin: 0;
+  color: var(--secondary-color);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.methodicalCardActions {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.methodicalCardActions .secondaryButton {
+  flex: 1;
+}
+
+.methodicalModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.methodicalAttachmentList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.methodicalAttachmentItem {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(52, 58, 64, 0.12);
+  border-radius: 8px;
+  background: rgba(248, 251, 255, 0.9);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.methodicalAttachmentItem > svg {
+  color: var(--primary-color);
+}
+
+.methodicalAttachmentItem span {
+  min-width: 0;
+  color: var(--text-color);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .emptyState,
 .loadingState {
   min-height: 160px;
@@ -782,6 +1020,10 @@
   .formBottomGrid {
     grid-template-columns: 1fr;
   }
+
+  .catalogOverview {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (--laptop) {
@@ -792,6 +1034,10 @@
   }
 
   .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .methodicalFilters {
     grid-template-columns: 1fr;
   }
 
@@ -830,7 +1076,8 @@
   }
 
   .cardList,
-  .disciplineGrid {
+  .disciplineGrid,
+  .methodicalGrid {
     grid-template-columns: 1fr;
   }
 
@@ -849,6 +1096,16 @@
 
   .fileItem {
     grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .methodicalAttachmentItem {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .methodicalAttachmentItem .secondaryButton,
+  .methodicalAttachmentItem .iconButton {
+    width: 100%;
+    grid-column: 1 / -1;
   }
 
   .fileItem small,

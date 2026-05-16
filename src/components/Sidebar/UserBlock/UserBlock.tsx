@@ -11,7 +11,7 @@ type UserBlockProps = {
 };
 
 export const UserBlock = ({ onNavigate }: UserBlockProps) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, avatarUrl } = useAuth();
 
   const to = isAuthenticated ? ROUTES.PROFILE : ROUTES.SIGN_IN;
   const roleLabels: Record<RoleEnum, string> = {
@@ -33,7 +33,9 @@ export const UserBlock = ({ onNavigate }: UserBlockProps) => {
       className={({ isActive }) => `${s.userCard} ${isActive ? s.active : ''}`}
     >
       <div className={s.avatar}>
-        {isAuthenticated ? (
+        {isAuthenticated && avatarUrl ? (
+          <img src={avatarUrl} alt="Фото профиля" className={s.avatarImage} />
+        ) : isAuthenticated ? (
           title.trim().charAt(0).toUpperCase()
         ) : (
           <FiLogIn size={22} aria-hidden="true" />

@@ -1,12 +1,10 @@
 import { Alert, Badge, Button, Card, Spinner } from 'react-bootstrap';
 
 import { usePendingUsers } from '@hooks/admin/usePendingUsers';
-import { useAuth } from '@context/AuthContext';
 
 import s from './PendingUsers.module.css';
 
 export const PendingUsers = () => {
-  const { logout } = useAuth();
   const { users, loading, error, approveUser, rejectUser } = usePendingUsers();
 
   if (loading) {
@@ -42,10 +40,6 @@ export const PendingUsers = () => {
           <Badge bg="primary" pill className={s.counter}>
             {users.length} pending
           </Badge>
-
-          <Button variant="outline-danger" onClick={logout}>
-            Выйти
-          </Button>
         </div>
       </div>
 

@@ -59,7 +59,7 @@ export const About = () => (
         {roles.map((role) => (
           <Col key={role.title} xs={12} md={6} xl={4}>
             <Card className={s.infoCard}>
-              <Card.Body>
+              <Card.Body className={s.cardBody}>
                 <Card.Title className={s.cardTitle}>{role.title}</Card.Title>
                 <Card.Text>{role.text}</Card.Text>
               </Card.Body>

@@ -66,6 +66,7 @@ export type UpcomingScheduleDto = {
   disciplineName: string;
   teacherName: string | null;
   room: string | null;
+  url: string | null;
   startDateTime: string;
   endDateTime: string;
 };

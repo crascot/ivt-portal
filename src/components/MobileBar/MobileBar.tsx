@@ -1,7 +1,5 @@
-import { NavLink } from 'react-router-dom';
 import { FiMenu } from 'react-icons/fi';
 
-import { ROUTES } from '@utils/routes';
 import s from './MobileBar.module.css';
 
 type MobileBarProps = {
@@ -12,14 +10,21 @@ type MobileBarProps = {
 export const MobileBar = ({ isMenuOpen, onMenuClick }: MobileBarProps) => {
   return (
     <header className={s.mobileBar}>
-      <NavLink to={ROUTES.MAIN} end className={s.brand}>
-        <div className={s.logo}>IVT</div>
+      <div className={s.brand}>
+        <div className={s.logo}>
+          <img
+            src="/logo.svg"
+            alt=""
+            className={s.logoImage}
+            aria-hidden="true"
+          />
+        </div>
 
         <div className={s.brandText}>
-          <span className={s.brandTitle}>IVT Portal</span>
-          <span className={s.brandSubtitle}>Учебный веб-портал</span>
+          <span className={s.brandTitle}>Университет</span>
+          <span className={s.brandSubtitle}>Студенческий портал</span>
         </div>
-      </NavLink>
+      </div>
 
       <button
         type="button"

@@ -3,6 +3,7 @@ import {
   FiAlertCircle,
   FiBookOpen,
   FiFolder,
+  FiInfo,
   FiPlus,
   FiSearch,
 } from 'react-icons/fi';
@@ -19,6 +20,7 @@ import {
   UmmMaterialShortDto,
 } from '@entities/ummRequest';
 import { useUmmList } from '@hooks/umm/useUmmList';
+import { ROUTES } from '@utils/routes';
 import { ummDisciplinePath } from '@utils/ummRoutes';
 
 import { UmmCard } from './components/UmmCard';
@@ -48,6 +50,7 @@ export const Umm = () => {
   const [disciplineStats, setDisciplineStats] = useState<
     UmmDisciplineStatDto[]
   >([]);
+  const [methodicalCount, setMethodicalCount] = useState(0);
 
   const {
     materials,
@@ -75,6 +78,15 @@ export const Umm = () => {
     }
   }, []);
 
+  const loadMethodicalCount = useCallback(async () => {
+    try {
+      const count = await ummApi.getMethodicalCount();
+      setMethodicalCount(count);
+    } catch {
+      setMethodicalCount(0);
+    }
+  }, []);
+
   useEffect(() => {
     if (role === RoleEnum.TEACHER) {
       scheduleApi
@@ -88,12 +100,14 @@ export const Umm = () => {
 
   useEffect(() => {
     void loadDisciplineStats();
-  }, [loadDisciplineStats]);
+    void loadMethodicalCount();
+  }, [loadDisciplineStats, loadMethodicalCount]);
 
   const refreshAll = useCallback(() => {
     void loadDisciplineStats();
+    void loadMethodicalCount();
     reload();
-  }, [loadDisciplineStats, reload]);
+  }, [loadDisciplineStats, loadMethodicalCount, reload]);
 
   const handleCreate = async (data: {
     title: string;
@@ -229,81 +243,98 @@ export const Umm = () => {
         </section>
       )}
 
-      {!searchActive && (
-        <section className={s.catalogSection}>
-          <div className={s.sectionHeader}>
-            <div>
-              <h2>Дисциплины</h2>
-              <p>Откройте дисциплину, чтобы посмотреть материалы по курсу.</p>
-            </div>
-            <span>{disciplineStats.length} дисциплин</span>
+      <div className={s.catalogOverview}>
+        <Link to={ROUTES.UMM_METHODICAL} className={s.methodicalFeatureCard}>
+          <div className={s.methodicalFeatureIcon}>
+            <FiBookOpen size={36} aria-hidden="true" />
           </div>
+          <h2>Все методические указания</h2>
+          <p>
+            Единая библиотека всех методичек кафедры, загруженных
+            администратором.
+          </p>
+          <span className={s.methodicalFeatureNote}>
+            <FiInfo size={15} aria-hidden="true" />
+            Не зависит от дисциплины
+          </span>
+          <strong>{methodicalCount} методичек</strong>
+          <span className={s.methodicalFeatureButton}>Открыть</span>
+        </Link>
 
-          {disciplineStats.length === 0 ? (
-            <div className={s.emptyState}>
-              <FiFolder size={32} aria-hidden="true" />
-              <strong>Материалы пока не опубликованы</strong>
-              <span>
-                После публикации преподавателями здесь появятся карточки
-                дисциплин.
-              </span>
+        {!searchActive ? (
+          <section className={s.catalogSection}>
+            <div className={s.sectionHeader}>
+              <div>
+                <h2>Дисциплины</h2>
+                <p>Откройте дисциплину, чтобы посмотреть материалы по курсу.</p>
+              </div>
+              <span>{disciplineStats.length} дисциплин</span>
             </div>
-          ) : (
-            <div className={s.disciplineGrid}>
-              {disciplineStats.map((row) => (
-                <Link
-                  key={row.disciplineId}
-                  to={ummDisciplinePath(row.disciplineId)}
-                  className={s.disciplineCard}
-                >
-                  <div className={s.disciplineIcon}>
-                    <FiBookOpen size={24} aria-hidden="true" />
-                  </div>
-                  <div>
-                    <h3>{row.disciplineName}</h3>
-                    <p>Материалов: {row.materialCount}</p>
-                  </div>
-                  <span className={s.disciplineCardHint}>Открыть</span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
 
-      {searchActive && (
-        <section className={s.catalogSection}>
-          <div className={s.sectionHeader}>
-            <div>
-              <h2>Результаты поиска</h2>
-              <p>Материалы, найденные по текущим фильтрам.</p>
+            {disciplineStats.length === 0 ? (
+              <div className={s.emptyState}>
+                <FiFolder size={32} aria-hidden="true" />
+                <strong>Материалы пока не опубликованы</strong>
+                <span>
+                  После публикации преподавателями здесь появятся карточки
+                  дисциплин.
+                </span>
+              </div>
+            ) : (
+              <div className={s.disciplineGrid}>
+                {disciplineStats.map((row) => (
+                  <Link
+                    key={row.disciplineId}
+                    to={ummDisciplinePath(row.disciplineId)}
+                    className={s.disciplineCard}
+                  >
+                    <div className={s.disciplineIcon}>
+                      <FiBookOpen size={24} aria-hidden="true" />
+                    </div>
+                    <div>
+                      <h3>{row.disciplineName}</h3>
+                      <p>Материалов: {row.materialCount}</p>
+                    </div>
+                    <span className={s.disciplineCardHint}>Открыть</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        ) : (
+          <section className={s.catalogSection}>
+            <div className={s.sectionHeader}>
+              <div>
+                <h2>Результаты поиска</h2>
+                <p>Материалы, найденные по текущим фильтрам.</p>
+              </div>
+              <span>{materials.length} найдено</span>
             </div>
-            <span>{materials.length} найдено</span>
-          </div>
 
-          {isLoading ? (
-            <div className={s.loadingState}>Загрузка материалов...</div>
-          ) : materials.length === 0 ? (
-            <div className={s.emptyState}>
-              <FiSearch size={32} aria-hidden="true" />
-              <strong>Ничего не найдено</strong>
-              <span>Измените запрос или сбросьте фильтры.</span>
-            </div>
-          ) : (
-            <div className={s.cardList}>
-              {materials.map((material) => (
-                <UmmCard
-                  key={material.id}
-                  material={material}
-                  canManage={canManage}
-                  onEdit={canManage ? handleEdit : undefined}
-                  onDelete={canManage ? handleDelete : undefined}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      )}
+            {isLoading ? (
+              <div className={s.loadingState}>Загрузка материалов...</div>
+            ) : materials.length === 0 ? (
+              <div className={s.emptyState}>
+                <FiSearch size={32} aria-hidden="true" />
+                <strong>Ничего не найдено</strong>
+                <span>Измените запрос или сбросьте фильтры.</span>
+              </div>
+            ) : (
+              <div className={s.cardList}>
+                {materials.map((material) => (
+                  <UmmCard
+                    key={material.id}
+                    material={material}
+                    canManage={canManage}
+                    onEdit={canManage ? handleEdit : undefined}
+                    onDelete={canManage ? handleDelete : undefined}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+      </div>
     </div>
   );
 };

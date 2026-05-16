@@ -194,7 +194,11 @@ export const TaskDetail = () => {
           )}
 
           {isStudentRole && studentId != null && (
-            <StudentReportsPanel taskId={task.id} studentId={studentId} />
+            <StudentReportsPanel
+              taskId={task.id}
+              studentId={studentId}
+              onMutated={loadTask}
+            />
           )}
 
           {!showTeacherReports && (!isStudentRole || studentId == null) && (

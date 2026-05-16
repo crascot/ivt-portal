@@ -18,10 +18,12 @@ export enum ROUTES {
   ADMIN_STATISTICS_STUDENT = '/statistics/admin/discipline/:disciplineId/group/:groupId/student/:studentId',
   NOTIFICATIONS_HISTORY = '/notifications-history',
   UMM = '/umm',
+  UMM_METHODICAL = '/umm/methodical',
   UMM_DISCIPLINE = '/umm/discipline/:disciplineId',
   UMM_DETAIL = '/umm/:id',
 
   ADMIN_PENDING_USERS = '/admin/pending-users',
+  ADMIN_USERS = '/admin/users',
   ADMIN_GROUPS = '/admin/groups',
   ADMIN_DISCIPLINES = '/admin/disciplines',
 }

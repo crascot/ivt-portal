@@ -30,14 +30,6 @@
     color 0.2s ease;
 }
 
-.brand:hover {
-  transform: translateY(-1px);
-}
-
-.brandActive {
-  color: var(--primary-color);
-}
-
 .logo {
   width: 52px;
   height: 52px;
@@ -51,6 +43,14 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   flex-shrink: 0;
+}
+
+.logoImage {
+  width: 28px;
+  height: 28px;
+  display: block;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
 .brandText {

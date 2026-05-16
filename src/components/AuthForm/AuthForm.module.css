@@ -40,6 +40,44 @@
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.12);
 }
 
+.passwordControlWrap {
+  position: relative;
+}
+
+.passwordControl {
+  padding-right: 3.25rem;
+}
+
+.passwordControl:global(.is-invalid) {
+  padding-right: 5.5rem;
+  background-position: right 3.35rem center;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 25px;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--secondary-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.passwordToggle:hover,
+.passwordToggle:focus-visible {
+  background: rgba(0, 123, 255, 0.08);
+  color: var(--primary-color);
+}
+
 .submitButton {
   min-height: 52px;
   border-radius: 14px;

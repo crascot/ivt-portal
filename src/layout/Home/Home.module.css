@@ -52,6 +52,7 @@
 .actionCard,
 .featureCard {
   height: 100%;
+  min-height: 162px;
   border: 1px solid rgba(52, 58, 64, 0.08);
   border-radius: 24px;
   box-shadow: 0 12px 32px rgba(17, 24, 39, 0.05);

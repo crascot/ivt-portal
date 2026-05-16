@@ -61,6 +61,7 @@ const roleNavItems: Record<string, NavItem[]> = {
   ],
   ADMIN: [
     { label: 'Заявки', to: ROUTES.ADMIN_PENDING_USERS, icon: FiClipboard },
+    { label: 'Пользователи', to: ROUTES.ADMIN_USERS, icon: FiUsers },
     { label: 'Группы', to: ROUTES.ADMIN_GROUPS, icon: FiUsers },
     { label: 'Дисциплины', to: ROUTES.ADMIN_DISCIPLINES, icon: FiBookOpen },
     { label: 'Расписание', to: ROUTES.SCHEDULE, icon: FiCalendar },
@@ -114,21 +115,21 @@ export const Sidebar = ({ isOpen = false, onNavigate }: SidebarProps) => {
   return (
     <aside id="main-sidebar" className={`${s.sidebar} ${isOpen ? s.open : ''}`}>
       <div className={s.header}>
-        <NavLink
-          to={ROUTES.MAIN}
-          end
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            `${s.brand} ${isActive ? s.brandActive : ''}`
-          }
-        >
-          <div className={s.logo}>IVT</div>
+        <div className={s.brand}>
+          <div className={s.logo}>
+            <img
+              src="/logo.svg"
+              alt=""
+              className={s.logoImage}
+              aria-hidden="true"
+            />
+          </div>
 
           <div className={s.brandText}>
-            <span className={s.brandTitle}>IVT Portal</span>
-            <span className={s.brandSubtitle}>Учебный веб-портал</span>
+            <span className={s.brandTitle}>Университет</span>
+            <span className={s.brandSubtitle}>Студенческий портал</span>
           </div>
-        </NavLink>
+        </div>
       </div>
 
       <div className={s.userSection}>

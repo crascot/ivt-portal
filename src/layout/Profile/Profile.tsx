@@ -3,7 +3,6 @@ import {
   type ChangeEvent,
   type FormEvent,
   type ReactNode,
-  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -198,7 +197,8 @@ const EmptyState = ({ children }: { children: ReactNode }) => (
 );
 
 export const Profile = () => {
-  const { user, isAuthenticated, login, logout } = useAuth();
+  const { user, isAuthenticated, avatarUrl, login, logout, reloadAvatar } =
+    useAuth();
   const { announcements } = useAnnouncements();
   const [taskStats, setTaskStats] = useState<TaskStatisticsDto | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
@@ -224,7 +224,6 @@ export const Profile = () => {
   );
   const [isRoleDataLoading, setIsRoleDataLoading] = useState(false);
   const [roleDataError, setRoleDataError] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isEditOpen, setEditOpen] = useState(false);
   const [isProfileSaving, setProfileSaving] = useState(false);
   const [profileFormError, setProfileFormError] = useState<string | null>(null);
@@ -236,33 +235,6 @@ export const Profile = () => {
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
-
-  const loadAvatar = useCallback(async () => {
-    try {
-      const blob = await profileApi.getAvatarBlob();
-      const url = URL.createObjectURL(blob);
-      setAvatarUrl(url);
-    } catch {
-      setAvatarUrl(null);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setAvatarUrl(null);
-      return;
-    }
-
-    void loadAvatar();
-  }, [isAuthenticated, loadAvatar, user?.email]);
-
-  useEffect(() => {
-    return () => {
-      if (avatarUrl) {
-        URL.revokeObjectURL(avatarUrl);
-      }
-    };
-  }, [avatarUrl]);
 
   useEffect(() => {
     if (!avatarFile) {
@@ -554,7 +526,7 @@ export const Profile = () => {
         await profileApi.uploadAvatar(avatarFile);
       }
 
-      await loadAvatar();
+      await reloadAvatar();
       setEditOpen(false);
       setAvatarFile(null);
     } catch {
@@ -749,6 +721,13 @@ export const Profile = () => {
       to: ROUTES.ADMIN_PENDING_USERS,
       icon: FiClipboard,
       tone: 'blue',
+    },
+    {
+      label: 'Пользователи',
+      description: 'Группы, старосты и данные преподавателей',
+      to: ROUTES.ADMIN_USERS,
+      icon: FiUsers,
+      tone: 'cyan',
     },
     {
       label: 'Группы',

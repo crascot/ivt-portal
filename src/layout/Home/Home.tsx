@@ -22,13 +22,6 @@ const features = [
 ];
 
 const quickLinks = [
-  // {
-  //   title: 'Профиль',
-  //   text: 'Перейдите в личный кабинет и проверьте свои данные.',
-  //   to: ROUTES.PROFILE,
-  //   buttonText: 'Открыть профиль',
-  //   buttonClassName: 'btn btn-primary',
-  // },
   {
     title: 'О портале',
     text: 'Узнайте больше о возможностях и назначении системы.',

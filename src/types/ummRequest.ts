@@ -15,6 +15,46 @@ export type UmmMaterialAttachmentDto = {
   fileType: string;
 };
 
+export type DepartmentMethodicalAttachmentDto = {
+  id: number;
+  fileName: string;
+  fileType: string;
+};
+
+export type DepartmentMethodicalMaterialShortDto = {
+  id: number;
+  title: string;
+  description: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+
+  disciplineId: number | null;
+  disciplineName: string | null;
+
+  uploadedById: number;
+  uploadedByName: string;
+
+  attachmentsCount: number;
+  urlsCount: number;
+};
+
+export type DepartmentMethodicalMaterialDto = {
+  id: number;
+  title: string;
+  description: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+
+  disciplineId: number | null;
+  disciplineName: string | null;
+
+  uploadedById: number;
+  uploadedByName: string;
+
+  urls: string[];
+  attachments: DepartmentMethodicalAttachmentDto[];
+};
+
 export type UmmMaterialShortDto = {
   id: number;
   title: string;
@@ -91,6 +131,27 @@ export type UmmUpdatePayload = {
   disciplineId?: number;
   materialKind?: UmmMaterialKind;
   section?: string | null;
+  urls?: string[];
+  files?: File[];
+};
+
+export type DepartmentMethodicalFilters = {
+  disciplineId: number | null;
+  search: string;
+};
+
+export type DepartmentMethodicalCreatePayload = {
+  title: string;
+  description: string | null;
+  disciplineId: number | null;
+  urls: string[];
+  files: File[];
+};
+
+export type DepartmentMethodicalUpdatePayload = {
+  title?: string;
+  description?: string | null;
+  disciplineId?: number | null;
   urls?: string[];
   files?: File[];
 };

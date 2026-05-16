@@ -63,7 +63,7 @@ export const Schedule = () => {
           disabled={isLoading}
           className={s.refreshButton}
         >
-          <FiRefreshCw />
+          <FiRefreshCw className={s.refreshButtonIcon} />
           Обновить
         </Button>
       </div>

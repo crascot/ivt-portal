@@ -1,4 +1,8 @@
 import {
+  DepartmentMethodicalCreatePayload,
+  DepartmentMethodicalMaterialDto,
+  DepartmentMethodicalMaterialShortDto,
+  DepartmentMethodicalUpdatePayload,
   UmmCreatePayload,
   UmmDisciplineStatDto,
   UmmMaterialDto,
@@ -27,6 +31,30 @@ type ListParams = {
   section?: string | null;
 };
 
+type MethodicalListParams = {
+  disciplineId?: number | null;
+  search?: string;
+};
+
+const toMethodicalFormData = (
+  payload: DepartmentMethodicalCreatePayload | DepartmentMethodicalUpdatePayload
+) => {
+  const formData = new FormData();
+  if (payload.title != null) formData.append('title', payload.title);
+  if (payload.description !== undefined) {
+    formData.append('description', payload.description ?? '');
+  }
+  if (payload.disciplineId != null) {
+    formData.append('disciplineId', String(payload.disciplineId));
+  }
+  payload.urls?.forEach((url) => {
+    if (url.trim()) formData.append('urls', url.trim());
+  });
+  payload.files?.forEach((file) => formData.append('files', file));
+
+  return formData;
+};
+
 export const ummApi = {
   async getDisciplineStats(): Promise<UmmDisciplineStatDto[]> {
     const { data } = await api.get<UmmDisciplineStatDto[]>(
@@ -39,6 +67,92 @@ export const ummApi = {
     const { data } = await api.get<string[]>('/umm/meta/sections', {
       params: { disciplineId },
     });
+    return data;
+  },
+
+  async getMethodicalCount(): Promise<number> {
+    const { data } = await api.get<number>('/umm/methodical/count');
+    return data;
+  },
+
+  async listMethodicals(
+    params: MethodicalListParams = {}
+  ): Promise<DepartmentMethodicalMaterialShortDto[]> {
+    const { data } = await api.get<DepartmentMethodicalMaterialShortDto[]>(
+      '/umm/methodical',
+      {
+        params: {
+          disciplineId: params.disciplineId ?? undefined,
+          search: params.search?.trim() ? params.search.trim() : undefined,
+        },
+      }
+    );
+    return data;
+  },
+
+  async getMethodicalById(
+    id: number
+  ): Promise<DepartmentMethodicalMaterialDto> {
+    const { data } = await api.get<DepartmentMethodicalMaterialDto>(
+      `/umm/methodical/${id}`
+    );
+    return data;
+  },
+
+  async createMethodical(
+    payload: DepartmentMethodicalCreatePayload
+  ): Promise<DepartmentMethodicalMaterialDto> {
+    const { data } = await api.post<DepartmentMethodicalMaterialDto>(
+      '/umm/methodical',
+      toMethodicalFormData(payload)
+    );
+    return data;
+  },
+
+  async updateMethodical(
+    id: number,
+    payload: DepartmentMethodicalUpdatePayload
+  ): Promise<DepartmentMethodicalMaterialDto> {
+    const formData = toMethodicalFormData(payload);
+    if (payload.disciplineId === null) {
+      formData.append('clearDiscipline', 'true');
+    }
+
+    const { data } = await api.patch<DepartmentMethodicalMaterialDto>(
+      `/umm/methodical/${id}`,
+      formData
+    );
+    return data;
+  },
+
+  async deleteMethodical(id: number): Promise<void> {
+    await api.delete(`/umm/methodical/${id}`);
+  },
+
+  async removeMethodicalUrl(id: number, url: string): Promise<void> {
+    await api.delete(`/umm/methodical/${id}/urls`, { params: { url } });
+  },
+
+  async deleteMethodicalAttachment(attachmentId: number): Promise<void> {
+    await api.delete(`/umm/methodical/attachments/${attachmentId}`);
+  },
+
+  async downloadMethodicalAttachment(
+    attachmentId: number,
+    fileName: string
+  ): Promise<void> {
+    const { data } = await api.get<Blob>(
+      `/umm/methodical/attachments/${attachmentId}/download`,
+      { responseType: 'blob' }
+    );
+    triggerDownload(data, fileName);
+  },
+
+  async getMethodicalAttachmentBlob(attachmentId: number): Promise<Blob> {
+    const { data } = await api.get<Blob>(
+      `/umm/methodical/attachments/${attachmentId}/download`,
+      { responseType: 'blob' }
+    );
     return data;
   },
 

@@ -146,12 +146,13 @@ export const ScheduleDiary = ({
                           </span>
                           {item.url && (
                             <a
+                              className={s.lessonLinkButton}
                               href={item.url}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
                               <FiLink />
-                              Онлайн-занятие
+                              Перейти к занятию
                             </a>
                           )}
                         </div>

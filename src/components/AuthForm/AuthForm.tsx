@@ -1,5 +1,6 @@
-import { useMemo, type FC, type HTMLInputTypeAttribute } from 'react';
+import { useMemo, useState, type FC, type HTMLInputTypeAttribute } from 'react';
 import { Alert, Button, Form, Spinner } from 'react-bootstrap';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import {
   type RegisterOptions,
   type SubmitHandler,
@@ -111,6 +112,8 @@ const FIELD_META: Record<
 const trimValue = (value: string) => value.trim();
 
 export const AuthForm: FC<AuthFormProps> = (props) => {
+  const [isPasswordVisible, setPasswordVisible] = useState(false);
+
   const visibleFields = useMemo(() => {
     const source = props.fields?.length
       ? props.fields
@@ -280,6 +283,50 @@ export const AuthForm: FC<AuthFormProps> = (props) => {
         }
 
         const textField = field as TextFieldName;
+        const isPasswordField = textField === 'password';
+
+        if (isPasswordField) {
+          return (
+            <Form.Group key={textField} className={s.field}>
+              <Form.Label htmlFor={textField} className={s.label}>
+                {meta.label}
+              </Form.Label>
+
+              <div className={s.passwordControlWrap}>
+                <Form.Control
+                  id={textField}
+                  type={isPasswordVisible ? 'text' : 'password'}
+                  placeholder={meta.placeholder}
+                  autoComplete={
+                    props.mode === 'login' ? 'current-password' : 'new-password'
+                  }
+                  className={`${s.control} ${s.passwordControl}`}
+                  isInvalid={!!errorMessage}
+                  {...register(textField, getTextRules(textField))}
+                />
+
+                <button
+                  type="button"
+                  className={s.passwordToggle}
+                  onClick={() => setPasswordVisible((value) => !value)}
+                  aria-label={
+                    isPasswordVisible ? 'Скрыть пароль' : 'Показать пароль'
+                  }
+                >
+                  {isPasswordVisible ? (
+                    <FiEye size={20} aria-hidden="true" />
+                  ) : (
+                    <FiEyeOff size={20} aria-hidden="true" />
+                  )}
+                </button>
+
+                <Form.Control.Feedback type="invalid">
+                  {errorMessage}
+                </Form.Control.Feedback>
+              </div>
+            </Form.Group>
+          );
+        }
 
         return (
           <Form.Group key={textField} className={s.field}>
@@ -291,13 +338,7 @@ export const AuthForm: FC<AuthFormProps> = (props) => {
               id={textField}
               type={meta.type}
               placeholder={meta.placeholder}
-              autoComplete={
-                textField === 'password'
-                  ? props.mode === 'login'
-                    ? 'current-password'
-                    : 'new-password'
-                  : meta.autoComplete
-              }
+              autoComplete={meta.autoComplete}
               className={s.control}
               isInvalid={!!errorMessage}
               {...register(textField, getTextRules(textField))}

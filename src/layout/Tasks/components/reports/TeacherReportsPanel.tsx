@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Alert, Button, Collapse, Form, Spinner } from 'react-bootstrap';
+import { Alert, Badge, Button, Collapse, Form, Spinner } from 'react-bootstrap';
 
 import { useTeacherReports } from '@hooks/reports/useTeacherReports';
 import { ReportDto, ReportStatus } from '@entities/teacherRequest';
+import { compareReportRecency, pickLatestReport } from '@utils/taskStatus';
 
 import { ReportAttachmentsList } from './ReportAttachmentsList';
 import { ReportStatusBadge } from './ReportStatusBadge';
@@ -53,6 +54,26 @@ export const TeacherReportsPanel = ({ taskId, teacherId }: Props) => {
     reload,
   } = useTeacherReports(taskId, teacherId);
 
+  const latestReportIdsByStudent = useMemo(() => {
+    const reportsByStudent = new Map<number, ReportDto[]>();
+
+    reports.forEach((report) => {
+      const studentReports = reportsByStudent.get(report.studentId) ?? [];
+      studentReports.push(report);
+      reportsByStudent.set(report.studentId, studentReports);
+    });
+
+    const latestIds = new Map<number, number>();
+    reportsByStudent.forEach((studentReports, studentId) => {
+      const latestReport = pickLatestReport(studentReports);
+      if (latestReport) {
+        latestIds.set(studentId, latestReport.id);
+      }
+    });
+
+    return latestIds;
+  }, [reports]);
+
   const groupedReports = useMemo<StudentReportsGroup[]>(() => {
     const normalizedQuery = studentQuery.trim().toLowerCase();
 
@@ -87,11 +108,7 @@ export const TeacherReportsPanel = ({ taskId, teacherId }: Props) => {
     return Array.from(groups.values())
       .map((group) => ({
         ...group,
-        reports: [...group.reports].sort(
-          (a, b) =>
-            new Date(b.submittedAt).getTime() -
-            new Date(a.submittedAt).getTime()
-        ),
+        reports: [...group.reports].sort((a, b) => compareReportRecency(b, a)),
       }))
       .sort((a, b) =>
         a.studentName.localeCompare(b.studentName, 'ru-RU', {
@@ -218,8 +235,14 @@ export const TeacherReportsPanel = ({ taskId, teacherId }: Props) => {
                 <Collapse in={isStudentExpanded}>
                   <div>
                     <div className="d-flex flex-column gap-2 mt-2">
-                      {group.reports.map((report, idx) => {
+                      {group.reports.map((report) => {
                         const isReportExpanded = expandedReportId === report.id;
+                        const isLatestReport =
+                          latestReportIdsByStudent.get(group.studentId) ===
+                          report.id;
+                        const canDeleteAttachments =
+                          isLatestReport &&
+                          report.status === ReportStatus.Submitted;
 
                         return (
                           <div key={report.id} className={s.reportNestedItem}>
@@ -235,10 +258,10 @@ export const TeacherReportsPanel = ({ taskId, teacherId }: Props) => {
                               <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap w-100">
                                 <div className="d-flex flex-column text-start">
                                   <div className="d-flex align-items-center gap-2 flex-wrap">
-                                    <span className="small fw-semibold">
-                                      Попытка #{idx + 1}
-                                    </span>
                                     <ReportStatusBadge status={report.status} />
+                                    {isLatestReport && (
+                                      <Badge bg="primary">Актуальная</Badge>
+                                    )}
                                     {report.grade != null && (
                                       <span className="small fw-semibold text-success">
                                         Оценка: {report.grade}
@@ -273,7 +296,11 @@ export const TeacherReportsPanel = ({ taskId, teacherId }: Props) => {
                                   attachments={report.attachments}
                                   onDownload={downloadAttachment}
                                   onGetPreviewBlob={getAttachmentBlob}
-                                  onDelete={deleteAttachment}
+                                  onDelete={
+                                    canDeleteAttachments
+                                      ? deleteAttachment
+                                      : undefined
+                                  }
                                 />
 
                                 {report.commentTeacher && (
@@ -290,17 +317,24 @@ export const TeacherReportsPanel = ({ taskId, teacherId }: Props) => {
                                   </div>
                                 )}
 
-                                <div className={s.reviewForm}>
-                                  <TeacherReviewForm
-                                    isSubmitting={isSubmitting}
-                                    onCheck={(comment, files) =>
-                                      markChecked(report.id, comment, files)
-                                    }
-                                    onGrade={(grade) =>
-                                      setGrade(report.id, grade)
-                                    }
-                                  />
-                                </div>
+                                {isLatestReport ? (
+                                  <div className={s.reviewForm}>
+                                    <TeacherReviewForm
+                                      isSubmitting={isSubmitting}
+                                      onCheck={(comment, files) =>
+                                        markChecked(report.id, comment, files)
+                                      }
+                                      onGrade={(grade) =>
+                                        setGrade(report.id, grade)
+                                      }
+                                    />
+                                  </div>
+                                ) : (
+                                  <small className="text-muted d-block mt-2">
+                                    Прошлая попытка доступна только для
+                                    просмотра
+                                  </small>
+                                )}
                               </div>
                             </Collapse>
                           </div>

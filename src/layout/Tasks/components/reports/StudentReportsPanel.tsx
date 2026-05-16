@@ -1,7 +1,12 @@
+import { useMemo } from 'react';
 import { Alert, Button, Spinner } from 'react-bootstrap';
 
 import { useStudentReports } from '@hooks/reports/useStudentReports';
 import { ReportDto, ReportStatus } from '@entities/teacherRequest';
+import {
+  compareReportRecency,
+  isReportAcceptedAndGraded,
+} from '@utils/taskStatus';
 
 import { ReportAttachmentsList } from './ReportAttachmentsList';
 import { ReportStatusBadge } from './ReportStatusBadge';
@@ -27,8 +32,8 @@ const formatDate = (iso: string) => {
   }
 };
 
-const canEditReport = (report: ReportDto) =>
-  report.status === ReportStatus.Submitted;
+const canEditReport = (report: ReportDto, latestReport: ReportDto | null) =>
+  latestReport?.id === report.id && report.status === ReportStatus.Submitted;
 
 export const StudentReportsPanel = ({
   taskId,
@@ -46,6 +51,14 @@ export const StudentReportsPanel = ({
     downloadAttachment,
     getAttachmentBlob,
   } = useStudentReports(taskId, studentId);
+
+  const sortedReports = useMemo(
+    () => [...reports].sort((a, b) => compareReportRecency(b, a)),
+    [reports]
+  );
+  const latestReport = sortedReports[0] ?? null;
+  const isCompleted =
+    latestReport != null && isReportAcceptedAndGraded(latestReport);
 
   const runAndNotify = async (action: () => Promise<void>) => {
     await action();
@@ -65,15 +78,21 @@ export const StudentReportsPanel = ({
         </Alert>
       )}
 
-      <div className="mb-3">
-        <ReportSubmitForm
-          isSubmitting={isSubmitting}
-          error={null}
-          onSubmit={(comment, files) =>
-            runAndNotify(() => submitReport(comment, files))
-          }
-        />
-      </div>
+      {isCompleted ? (
+        <Alert variant="success" className="py-2 mb-3 small">
+          Задание принято и оценено.
+        </Alert>
+      ) : (
+        <div className="mb-3">
+          <ReportSubmitForm
+            isSubmitting={isSubmitting}
+            error={null}
+            onSubmit={(comment, files) =>
+              runAndNotify(() => submitReport(comment, files))
+            }
+          />
+        </div>
+      )}
 
       {!isLoading && reports.length === 0 && (
         <Alert variant="light" className="py-2 mb-0 small">
@@ -81,72 +100,84 @@ export const StudentReportsPanel = ({
         </Alert>
       )}
 
-      {reports.length > 0 && (
+      {sortedReports.length > 0 && (
         <div className={s.reportList}>
-          {reports.map((report) => (
-            <div key={report.id} className={s.reportItem}>
-              <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
-                <div className="d-flex align-items-center gap-2 flex-wrap">
-                  <ReportStatusBadge status={report.status} />
-                  <small className="text-muted">
-                    Отправлено {formatDate(report.submittedAt)}
-                  </small>
-                  {report.grade != null && (
-                    <span className="small fw-semibold text-success">
-                      Оценка: {report.grade}
-                    </span>
+          {sortedReports.map((report) => {
+            const isEditable = canEditReport(report, latestReport);
+
+            return (
+              <div key={report.id} className={s.reportItem}>
+                <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                  <div className="d-flex align-items-center gap-2 flex-wrap">
+                    <ReportStatusBadge status={report.status} />
+                    {latestReport?.id === report.id && (
+                      <span className="small fw-semibold text-primary">
+                        Актуальная
+                      </span>
+                    )}
+                    <small className="text-muted">
+                      Отправлено {formatDate(report.submittedAt)}
+                    </small>
+                    {report.grade != null && (
+                      <span className="small fw-semibold text-success">
+                        Оценка: {report.grade}
+                      </span>
+                    )}
+                  </div>
+                  {isEditable && (
+                    <Button
+                      size="sm"
+                      variant="outline-danger"
+                      onClick={() => {
+                        if (window.confirm('Удалить этот ответ?')) {
+                          void runAndNotify(() => deleteReport(report.id));
+                        }
+                      }}
+                    >
+                      Удалить
+                    </Button>
                   )}
                 </div>
-                {canEditReport(report) && (
-                  <Button
-                    size="sm"
-                    variant="outline-danger"
-                    onClick={() => {
-                      if (window.confirm('Удалить этот ответ?')) {
-                        void runAndNotify(() => deleteReport(report.id));
-                      }
-                    }}
+
+                {report.comment && (
+                  <p
+                    className="mb-1 mt-2 small"
+                    style={{ whiteSpace: 'pre-wrap' }}
                   >
-                    Удалить
-                  </Button>
+                    {report.comment}
+                  </p>
+                )}
+
+                <ReportAttachmentsList
+                  attachments={report.attachments}
+                  onDownload={downloadAttachment}
+                  onGetPreviewBlob={getAttachmentBlob}
+                  onDelete={
+                    isEditable
+                      ? (id) => void runAndNotify(() => deleteAttachment(id))
+                      : undefined
+                  }
+                />
+
+                {report.commentTeacher && (
+                  <div className={s.teacherComment}>
+                    <small className="text-muted d-block">
+                      Замечания преподавателя
+                      {report.submittedByUserName
+                        ? ` · ${report.submittedByUserName}`
+                        : ''}
+                    </small>
+                    <p
+                      className="mb-0 small"
+                      style={{ whiteSpace: 'pre-wrap' }}
+                    >
+                      {report.commentTeacher}
+                    </p>
+                  </div>
                 )}
               </div>
-
-              {report.comment && (
-                <p
-                  className="mb-1 mt-2 small"
-                  style={{ whiteSpace: 'pre-wrap' }}
-                >
-                  {report.comment}
-                </p>
-              )}
-
-              <ReportAttachmentsList
-                attachments={report.attachments}
-                onDownload={downloadAttachment}
-                onGetPreviewBlob={getAttachmentBlob}
-                onDelete={
-                  canEditReport(report)
-                    ? (id) => void runAndNotify(() => deleteAttachment(id))
-                    : undefined
-                }
-              />
-
-              {report.commentTeacher && (
-                <div className={s.teacherComment}>
-                  <small className="text-muted d-block">
-                    Замечания преподавателя
-                    {report.submittedByUserName
-                      ? ` · ${report.submittedByUserName}`
-                      : ''}
-                  </small>
-                  <p className="mb-0 small" style={{ whiteSpace: 'pre-wrap' }}>
-                    {report.commentTeacher}
-                  </p>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
