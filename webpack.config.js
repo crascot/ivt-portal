@@ -5,6 +5,25 @@ const webpack = require('webpack');
 const dotenv = require('dotenv');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+class CopyPublicAssetsPlugin {
+  apply(compiler) {
+    compiler.hooks.afterEmit.tap('CopyPublicAssetsPlugin', () => {
+      const publicDir = path.resolve(__dirname, 'public');
+      const outputDir = compiler.options.output.path;
+
+      if (!fs.existsSync(publicDir) || !outputDir) return;
+
+      fs.readdirSync(publicDir).forEach((entry) => {
+        if (entry === 'index.html') return;
+
+        fs.cpSync(path.join(publicDir, entry), path.join(outputDir, entry), {
+          recursive: true,
+        });
+      });
+    });
+  }
+}
+
 module.exports = async (env, argv) => {
   const mode = argv.mode || 'development';
   const envFile =
@@ -108,6 +127,7 @@ module.exports = async (env, argv) => {
           collapseWhitespace: true,
         },
       }),
+      new CopyPublicAssetsPlugin(),
       new webpack.DefinePlugin({
         'process.env.API_BASE_URL': JSON.stringify(apiBaseUrl),
       }),
