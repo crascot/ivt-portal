@@ -35,9 +35,11 @@ module.exports = async (env, argv) => {
   }
   const apiBaseUrl =
     process.env.API_BASE_URL ||
-    (mode === 'production'
-      ? 'http://95.217.88.31:8034'
-      : 'http://localhost:8081');
+    (mode === 'development' ? 'http://localhost:8081' : undefined);
+
+  if (!apiBaseUrl) {
+    throw new Error(`API_BASE_URL is required for webpack mode "${mode}"`);
+  }
   const devServerPort = Number(process.env.PORT, 10) || 3000;
   const postcssPresetEnv = (await import('postcss-preset-env')).default;
   const postcssGlobalData = (await import('@csstools/postcss-global-data'))

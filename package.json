@@ -1,6 +1,7 @@
 {
   "name": "react-typescript-boilerplate",
   "version": "1.0.0",
+  "packageManager": "yarn@1.22.22",
   "description": "React TypeScript Webpack boilerplate with ESLint and React Router",
   "main": "index.js",
   "scripts": {
